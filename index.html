@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evalúa+ | La Evolución de la Evaluación Interactiva</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+            <span>Evalúa+</span>
+        </div>
+        <nav>
+            <a href="#features" class="nav-link">Características</a>
+            <a href="#demo" class="nav-link">Demo</a>
+            <a href="#" class="cta-button">Acceder al Panel</a>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero">
+            <div class="hero-content">
+                <div class="badge" data-aos="fade-up" data-aos-delay="100">
+                    <span>🚀 La nueva era de la evaluación</span>
+                </div>
+                <h1 data-aos="fade-up" data-aos-delay="200"><span>Innovación</span> que inspira.<br>Resultados que impactan.</h1>
+                <p data-aos="fade-up" data-aos-delay="300">Evalúa+ es la plataforma definitiva para modernizar tus métodos de enseñanza. Ahorra tiempo, motiva a tus estudiantes y obtén análisis detallados como nunca antes.</p>
+                <div class="hero-buttons" data-aos="fade-up" data-aos-delay="400">
+                    <a href="#" class="cta-button hero-cta">Empezar ahora</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="panels">
+            <div class="panel interactive-card" data-aos="fade-right">
+                <div class="panel-icon teacher-icon">
+                    <i data-feather="edit-3"></i>
+                </div>
+                <h3>Eres Docente</h3>
+                <p class="panel-desc">Crea y gestiona evaluaciones en minutos. Diseña pruebas, genera códigos de acceso únicos y sigue el rendimiento de tus grupos en tu panel de control personal.</p>
+                <a href="#" class="panel-button">Ir a mi Panel de Docente</a>
+            </div>
+            <div class="panel interactive-card" data-aos="fade-left">
+                 <div class="panel-icon student-icon">
+                   <i data-feather="user-check"></i>
+                </div>
+                <h3>Eres Estudiante</h3>
+                <p class="panel-desc">Accede a tus evaluaciones de forma rápida y sencilla. Ingresa a tu panel con tu cuenta y utiliza el código de la sala para comenzar tus pruebas y ver tus resultados.</p>
+                <a href="#" class="panel-button">Ir a mi Panel de Estudiante</a>
+            </div>
+        </section>
+        
+        <!-- SECCIÓN DE CARACTERÍSTICAS RESTAURADA -->
+        <section id="features">
+            <div class="section-title" data-aos="fade-up">
+                <h2>Todo lo que necesitas, y más</h2>
+                <p>Descubre las herramientas que transformarán tu manera de evaluar.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card interactive-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon"><i data-feather="zap"></i></div>
+                    <h4>Calificación Automática</h4>
+                    <p>Olvida las largas horas de calificación manual. Evalúa+ procesa las respuestas al instante.</p>
+                </div>
+                <div class="feature-card interactive-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon"><i data-feather="message-square"></i></div>
+                    <h4>Retroalimentación Detallada</h4>
+                    <p>Cada pregunta puede incluir explicaciones y recursos para que el aprendizaje no se detenga.</p>
+                </div>
+                <div class="feature-card interactive-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon"><i data-feather="archive"></i></div>
+                    <h4>Banco de Preguntas</h4>
+                    <p>Crea tu propia biblioteca de preguntas y reutilízalas en futuras evaluaciones fácilmente.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN DE DEMO INTERACTIVA RESTAURADA -->
+        <section id="demo">
+            <div class="section-title" data-aos="fade-up">
+                <h2>Prueba Interactiva</h2>
+                <p>Selecciona una asignatura y comprueba la experiencia Evalúa+.</p>
+            </div>
+            <div class="subject-selector" data-aos="fade-up" data-aos-delay="100">
+                <button class="subject-tab active" data-subject="spanish">Español</button>
+                <button class="subject-tab" data-subject="natural">Ciencias Naturales</button>
+                <button class="subject-tab" data-subject="social">Ciencias Sociales</button>
+            </div>
+            <div class="progress-bar-container" data-aos="fade-up" data-aos-delay="150">
+                <div class="progress-bar"></div>
+            </div>
+            <div class="questions-wrapper" data-aos="fade-up" data-aos-delay="200">
+                <div class="question-card interactive-card active" id="spanish-q">
+                    <p class="question-main">"El amor es un faro erigido para siempre que contempla las tempestades y nunca se estremece". En este fragmento de Shakespeare, ¿cuál es la función principal de la metáfora del faro?</p>
+                    <form class="question-form" data-correct="C">
+                        <div class="options">
+                            <label class="option"><input type="radio" name="q1" value="A"><span>A) Comparar el amor con la soledad del océano.</span></label>
+                            <label class="option"><input type="radio" name="q1" value="B"><span>B) Indicar que el amor es una guía solo para navegantes.</span></label>
+                            <label class="option"><input type="radio" name="q1" value="C"><span>C) Representar el amor como una guía constante e inmutable ante la adversidad.</span></label>
+                            <label class="option"><input type="radio" name="q1" value="D"><span>D) Sugerir que el amor es una construcción artificial y fría.</span></label>
+                        </div>
+                        <button type="submit" class="cta-button-form">Verificar</button>
+                        <div class="feedback"></div>
+                    </form>
+                </div>
+                <div class="question-card interactive-card" id="natural-q">
+                    <p class="question-main">Si una célula eucariota presenta una alta actividad de síntesis de proteínas para exportación, ¿qué organelo esperaría encontrar abundantemente desarrollado en su citoplasma?</p>
+                    <form class="question-form" data-correct="B">
+                        <div class="options">
+                            <label class="option"><input type="radio" name="q2" value="A"><span>A) Lisosomas.</span></label>
+                            <label class="option"><input type="radio" name="q2" value="B"><span>B) Retículo endoplasmático rugoso (RER).</span></label>
+                            <label class="option"><input type="radio" name="q2" value="C"><span>C) Mitocondrias.</span></label>
+                            <label class="option"><input type="radio" name="q2" value="D"><span>D) Retículo endoplasmático liso (REL).</span></label>
+                        </div>
+                        <button type="submit" class="cta-button-form">Verificar</button>
+                        <div class="feedback"></div>
+                    </form>
+                </div>
+                <div class="question-card interactive-card" id="social-q">
+                    <p class="question-main">La Guerra Fría fue un enfrentamiento ideológico entre dos superpotencias. ¿Cuál de las siguientes opciones describe mejor una consecuencia geopolítica directa de este conflicto?</p>
+                    <form class="question-form" data-correct="D">
+                        <div class="options">
+                            <label class="option"><input type="radio" name="q3" value="A"><span>A) La unificación de Alemania en un solo estado socialista.</span></label>
+                            <label class="option"><input type="radio" name="q3" value="B"><span>B) El fin de todas las monarquías en Europa.</span></label>
+                            <label class="option"><input type="radio" name="q3" value="C"><span>C) La descolonización pacífica y coordinada de África y Asia.</span></label>
+                            <label class="option"><input type="radio" name="q3" value="D"><span>D) La formación de alianzas militares como la OTAN y el Pacto de Varsovia.</span></label>
+                        </div>
+                        <button type="submit" class="cta-button-form">Verificar</button>
+                        <div class="feedback"></div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="manual" data-aos="zoom-in">
+            <div class="manual-card interactive-card">
+                <div class="manual-icon">
+                    <i data-feather="book-open" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h3>Tu Guía para el Éxito</h3>
+                <p>Todo lo que necesitas para dominar Evalúa+. Nuestra guía completa te mostrará paso a paso cómo crear salas, gestionar evaluaciones y aprovechar al máximo nuestras herramientas inteligentes.</p>
+                <a href="#" class="cta-button-form">Descargar Manual (PDF)</a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>© 2025 Evalúa+ • Diseñado con ❤️ por Miguel Barajas y Daniel Calvo</p>
+    </footer>
+    
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
+
