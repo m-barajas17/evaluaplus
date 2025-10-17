@@ -1,0 +1,164 @@
+/* --- ESTILOS PARA LA PÁGINA DE AUTENTICACIÓN --- */
+:root {
+    --color-background: #F0F2F5;
+    --color-surface: #FFFFFF;
+    --color-text: #1C2A4B;
+    --color-text-muted: #6B7280;
+    --color-primary: #38BDF8;
+    --color-secondary: #3730A3;
+    --gradient: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    --color-border: #E5E7EB;
+    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.07), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --font-family: 'Poppins', sans-serif;
+    --border-radius: 16px;
+    --transition-speed: 0.3s;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: var(--font-family);
+    background: linear-gradient(180deg, #F0F9FF 0%, #F0F5FF 100%);
+    color: var(--color-text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.auth-container {
+    padding: 2rem;
+    max-width: 450px;
+    width: 100%;
+}
+
+.auth-card {
+    background: var(--color-surface);
+    border-radius: var(--border-radius);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--color-text);
+    margin-bottom: 1.5rem;
+}
+
+.logo svg {
+    color: var(--color-primary);
+}
+
+.auth-card h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    color: var(--color-text-muted);
+    margin-bottom: 2rem;
+}
+
+form {
+    text-align: left;
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 2px solid var(--color-border);
+    font-size: 1rem;
+    transition: border-color var(--transition-speed);
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--color-secondary);
+}
+
+.cta-button {
+    background: var(--gradient);
+    color: var(--color-surface);
+    width: 100%;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+
+.cta-button:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(55, 48, 163, 0.25);
+}
+
+.auth-switch {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.auth-switch a {
+    color: var(--color-secondary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.role-selector {
+    display: flex;
+    gap: 1rem;
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+.role-selector label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+}
+
+.role-selector input[type="radio"] {
+    display: none;
+}
+
+.role-selector span {
+    font-weight: 600;
+}
+
+.role-selector input[type="radio"]:checked + span {
+    color: var(--color-secondary);
+}
+
+.role-selector label:has(input:checked) {
+    background-color: #EEF2FF;
+}
