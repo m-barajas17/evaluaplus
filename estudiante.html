@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Estudiante | Evalúa+</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/estudiante.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <span>Evalúa+</span>
+            </div>
+            <div class="user-info">
+                <p id="user-name">Bienvenido, cargando...</p>
+                <button id="logout-button" class="cta-button secondary">Cerrar Sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="card">
+            <h2>Unirse a una Sala de Evaluación</h2>
+            <p>Ingresa el código de 6 caracteres proporcionado por tu docente para comenzar.</p>
+            <form id="join-room-form">
+                <div class="input-group">
+                    <label for="room-code">Código de la Sala</label>
+                    <input type="text" id="room-code" name="room-code" placeholder="XXXXXX" required maxlength="6">
+                </div>
+                <button type="submit" class="cta-button">Unirme a la Sala</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Mis Evaluaciones</h2>
+            <div id="joined-rooms-list">
+                <p>Aún no te has unido a ninguna sala.</p>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/estudiante.js"></script>
+</body>
+</html>
