@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Docente | Evalúa+</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/docente.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <span>Evalúa+</span>
+            </div>
+            <div class="user-info">
+                <p id="user-name">Bienvenido, cargando...</p>
+                <button id="logout-button" class="cta-button secondary">Cerrar Sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="card">
+            <h2>Crear Nueva Sala de Evaluación</h2>
+            <form id="create-room-form">
+                <div class="input-group">
+                    <label for="title">Título de la Evaluación</label>
+                    <input type="text" id="title" name="title" placeholder="Ej: Examen Parcial de Álgebra" required>
+                </div>
+                <div class="input-group">
+                    <label for="subject">Materia</label>
+                    <input type="text" id="subject" name="subject" placeholder="Ej: Matemáticas" required>
+                </div>
+                <button type="submit" class="cta-button">Crear Sala</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Mis Salas Creadas</h2>
+            <div id="rooms-list" class="rooms-grid">
+                <p>Aún no has creado ninguna sala.</p>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/docente.js"></script>
+</body>
+</html>
