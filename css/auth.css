@@ -51,6 +51,7 @@ body {
     font-size: 1.6rem;
     color: var(--color-text);
     margin-bottom: 1.5rem;
+    text-decoration: none; /* Añadido */
 }
 
 .logo svg {
