@@ -380,3 +380,74 @@ body {
     font-size: 0.85rem;
     padding: 0.5rem 1rem;
 }
+
+/* --- ESTILOS ADICIONALES PARA BANCO DE PREGUNTAS --- */
+
+/* Estilo para el grupo del checkbox de guardar en el banco */
+.save-to-bank-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding: 0.75rem;
+    background-color: #f9fafb;
+    border-radius: 8px;
+}
+.save-to-bank-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-secondary);
+}
+.save-to-bank-group label {
+    margin-bottom: 0; /* Anular margen por defecto del input-group */
+    font-weight: 600;
+}
+
+/* Estilos para el modal del banco */
+.bank-filters {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.bank-filters .input-group {
+    margin-bottom: 0;
+}
+
+.bank-filters select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 2px solid var(--color-border);
+    font-size: 1rem;
+    font-family: var(--font-family);
+    background-color: var(--color-surface);
+}
+
+.bank-questions-list {
+    max-height: 40vh; /* Altura máxima para la lista */
+    overflow-y: auto; /* Scroll si el contenido excede la altura */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.bank-question-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.bank-question-item input[type="checkbox"] {
+    margin-top: 4px; /* Alinear con la primera línea de texto */
+    width: 18px;
+    height: 18px;
+}
+
+.bank-question-item label {
+    flex-grow: 1;
+    font-weight: 500;
+}

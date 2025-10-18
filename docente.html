@@ -64,6 +64,7 @@
                 <div class="questions-header">
                     <h2 id="questions-title">Gestionando Evaluación</h2>
                     <div>
+                        <button id="add-from-bank-btn" class="cta-button secondary">Añadir desde mi Banco</button>
                         <button id="add-new-question-btn" class="cta-button">Añadir Nueva Pregunta</button>
                         <button class="cta-button secondary back-to-main">Volver a Mis Salas</button>
                     </div>
@@ -75,7 +76,7 @@
 
     </main>
     
-    <div id="add-question-modal" class="modal-overlay" style="display: none;">
+    <div id="add-question-modal" class="modal-overlay">
         <div class="modal-content">
             <form id="add-question-form">
                 <h2 id="modal-title">Añadir Nueva Pregunta</h2>
@@ -124,6 +125,11 @@
                     <textarea id="feedback-incorrect" rows="2" placeholder="Ej: La respuesta correcta es C porque..."></textarea>
                 </div>
 
+                <div class="input-group save-to-bank-group">
+                    <input type="checkbox" id="save-to-bank">
+                    <label for="save-to-bank">Guardar en mi Banco de Preguntas</label>
+                </div>
+
                 <div class="modal-actions">
                     <button type="button" id="cancel-question-btn" class="cta-button secondary">Cancelar</button>
                     <button type="submit" id="save-question-btn" class="cta-button">Guardar Pregunta</button>
@@ -131,6 +137,31 @@
             </form>
         </div>
     </div>
+
+    <div id="bank-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Mi Banco de Preguntas</h2>
+            
+            <div class="bank-filters">
+                <div class="input-group">
+                    <label for="subject-filter">Filtrar por Materia</label>
+                    <select id="subject-filter">
+                        <option value="all">Todas las materias</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="bank-questions-list" class="bank-questions-list">
+                <p>Cargando preguntas...</p>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" id="cancel-bank-btn" class="cta-button secondary">Cancelar</button>
+                <button type="button" id="add-selected-questions-btn" class="cta-button">Añadir Seleccionadas</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/docente.js"></script>
 </body>
