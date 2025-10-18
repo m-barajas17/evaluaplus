@@ -44,6 +44,8 @@ body {
 .logo {
     font-weight: 700;
     font-size: 1.5rem;
+    text-decoration: none; /* Añadido */
+    color: var(--color-text); /* Añadido */
 }
 
 .user-info {
