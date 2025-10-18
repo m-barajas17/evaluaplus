@@ -52,9 +52,23 @@
             <section class="card">
                 <div class="results-header">
                     <h2 id="results-title">Resultados de la Evaluación</h2>
-                    <button id="back-to-main-view-btn" class="cta-button secondary">Volver</button>
+                    <button class="cta-button secondary back-to-main">Volver</button>
                 </div>
                 <div id="results-list">
+                </div>
+            </section>
+        </div>
+
+        <div id="manage-questions-view" style="display: none;">
+            <section class="card">
+                <div class="questions-header">
+                    <h2 id="questions-title">Gestionando Evaluación</h2>
+                    <div>
+                        <button id="add-new-question-btn" class="cta-button">Añadir Nueva Pregunta</button>
+                        <button class="cta-button secondary back-to-main">Volver a Mis Salas</button>
+                    </div>
+                </div>
+                <div id="questions-list-container">
                     </div>
             </section>
         </div>
@@ -64,7 +78,7 @@
     <div id="add-question-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <form id="add-question-form">
-                <h2>Añadir Nueva Pregunta</h2>
+                <h2 id="modal-title">Añadir Nueva Pregunta</h2>
                 
                 <div class="input-group">
                     <label for="question-text">Texto de la Pregunta</label>
@@ -112,7 +126,7 @@
 
                 <div class="modal-actions">
                     <button type="button" id="cancel-question-btn" class="cta-button secondary">Cancelar</button>
-                    <button type="submit" class="cta-button">Guardar Pregunta</button>
+                    <button type="submit" id="save-question-btn" class="cta-button">Guardar Pregunta</button>
                 </div>
             </form>
         </div>
