@@ -100,57 +100,64 @@ document.addEventListener('DOMContentLoaded', () => {
  * Inicializa el sistema de redirección inteligente en la página de inicio.
  * Verifica el estado de autenticación y ajusta los enlaces de acción.
  */
+// js/script.js (función actualizada)
+
 export const initializeRedirection = () => {
-    // Seleccionamos todos los botones que deben redirigir al panel o al login.
-    // Usamos una clase común 'smart-link' que debemos añadir en el HTML.
-    const ctaButtons = document.querySelectorAll('.cta-button, .panel-button');
+    // --- Referencias a los botones ---
+    // Botones genéricos
+    const genericCtas = document.querySelectorAll('.cta-button'); 
+    // Botones específicos de los paneles con sus nuevos IDs
+    const teacherPanelBtn = document.getElementById('teacher-panel-button');
+    const studentPanelBtn = document.getElementById('student-panel-button');
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             // --- USUARIO CON SESIÓN ACTIVA ---
             try {
-                // Consultamos su rol en Firestore
                 const userDocRef = doc(db, "users", user.uid);
                 const userDocSnap = await getDoc(userDocRef);
 
                 if (userDocSnap.exists()) {
                     const userRole = userDocSnap.data().rol;
                     
-                    // Definimos el destino según el rol
-                    const destination = userRole === 'docente' ? 'docente.html' : 'estudiante.html';
+                    if (userRole === 'docente') {
+                        // El usuario es DOCENTE
+                        genericCtas.forEach(button => {
+                            button.textContent = 'Ir a mi Panel';
+                            button.href = 'docente.html';
+                        });
+                        teacherPanelBtn.textContent = 'Ir a mi Panel de Docente';
+                        teacherPanelBtn.href = 'docente.html';
+                        studentPanelBtn.textContent = 'Acceder como Estudiante';
+                        studentPanelBtn.href = 'login.html'; // Lo manda al login para cambiar
 
-                    // Actualizamos todos los botones
-                    ctaButtons.forEach(button => {
-                        button.textContent = 'Ir a mi Panel';
-                        button.href = destination; // Asignamos el enlace directo
-                    });
+                    } else if (userRole === 'estudiante') {
+                        // El usuario es ESTUDIANTE
+                        genericCtas.forEach(button => {
+                            button.textContent = 'Ir a mi Panel';
+                            button.href = 'estudiante.html';
+                        });
+                        studentPanelBtn.textContent = 'Ir a mi Panel de Estudiante';
+                        studentPanelBtn.href = 'estudiante.html';
+                        teacherPanelBtn.textContent = 'Acceder como Docente';
+                        teacherPanelBtn.href = 'login.html'; // Lo manda al login para cambiar
+                    }
 
                 } else {
-                    // Si no hay documento, por seguridad lo mandamos al login
-                    ctaButtons.forEach(button => button.href = 'login.html');
+                    // Si no hay documento, todos al login por seguridad
+                    window.location.href = 'login.html';
                 }
             } catch (error) {
                 console.error("Error al obtener el rol del usuario:", error);
-                ctaButtons.forEach(button => button.href = 'login.html');
+                window.location.href = 'login.html';
             }
 
         } else {
             // --- USUARIO SIN SESIÓN ACTIVA ---
-            // Nos aseguramos de que todos los botones lleven al login.
-            ctaButtons.forEach(button => {
-                // Verificamos el texto original para no cambiar los botones de los paneles
-                if(button.classList.contains('panel-button')) {
-                    // No hacemos nada, su href ya es '#' y el comportamiento por defecto es correcto
-                } else {
-                    button.href = 'login.html';
-                }
-            });
-            
-             // Asignamos el enlace de login a los botones de los paneles de forma explícita
-            const teacherPanelButton = document.querySelector('.panel.interactive-card[data-aos="fade-right"] .panel-button');
-            const studentPanelButton = document.querySelector('.panel.interactive-card[data-aos="fade-left"] .panel-button');
-            if(teacherPanelButton) teacherPanelButton.href = 'login.html';
-            if(studentPanelButton) studentPanelButton.href = 'login.html';
+            // Todos los botones llevan al login
+            genericCtas.forEach(button => button.href = 'login.html');
+            teacherPanelBtn.href = 'login.html';
+            studentPanelBtn.href = 'login.html';
         }
     });
 };
