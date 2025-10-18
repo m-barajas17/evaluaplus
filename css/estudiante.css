@@ -266,3 +266,156 @@ body {
     padding: 0.4rem 0.8rem;
     border-radius: 6px;
 }
+
+/* --- ¡NUEVOS ESTILOS PARA EL HISTORIAL! --- */
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    /* --- MODIFICACIÓN --- */
+    cursor: pointer; /* Hacemos que parezca un botón */
+    transition: all var(--transition-speed);
+}
+
+/* --- ¡NUEVA REGLA! --- */
+.history-item:hover {
+    background-color: #EEF2FF; /* Resaltado al pasar el mouse */
+    border-color: var(--color-secondary);
+}
+
+
+.history-item-title {
+    font-weight: 600;
+}
+
+.history-item-score {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-secondary);
+    background-color: #EEF2FF;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+}
+
+
+/* --- ¡NUEVOS ESTILOS PARA EL MODAL DE REVISIÓN! --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(28, 42, 75, 0.6);
+    display: none; /* Oculto por defecto */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease;
+}
+
+.modal-content {
+    background: var(--color-surface);
+    padding: 2.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.95);
+    transition: transform var(--transition-speed) ease;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.modal-header h2 {
+    margin-bottom: 0;
+    border-bottom: none;
+    font-size: 1.5rem;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 2.5rem;
+    font-weight: 300;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    line-height: 1;
+}
+
+.review-content {
+    overflow-y: auto; /* Scroll si el contenido es muy largo */
+}
+
+.review-question-item {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.review-question-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.review-question-text {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.review-option {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    opacity: 0.7; /* Las opciones no seleccionadas se ven más tenues */
+}
+
+.review-option.student-answer {
+    background-color: #FEF3C7; /* Amarillo para la respuesta del estudiante */
+    border-color: #FBBF24;
+    opacity: 1;
+}
+
+.review-option.correct-answer {
+    background-color: #D1FAE5; /* Verde para la respuesta correcta */
+    border-color: #34D399;
+    opacity: 1;
+}
+
+.review-option.student-answer.correct-answer {
+    background-color: #D1FAE5; /* Si la del estudiante es la correcta, prevalece el verde */
+    border-color: #34D399;
+}
+
+.review-feedback {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.review-feedback.correct {
+    background-color: #E0F2FE;
+    color: #0C4A6E;
+}
+
+.review-feedback.incorrect {
+    background-color: #FEE2E2;
+    color: #991B1B;
+}

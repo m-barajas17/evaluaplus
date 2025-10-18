@@ -20,10 +20,15 @@ const userNameElement = document.getElementById('user-name');
 const logoutButton = document.getElementById('logout-button');
 const joinRoomForm = document.getElementById('join-room-form');
 const joinRoomSection = document.getElementById('join-room-section');
-const evaluationSection = document.getElementById('evaluation-section'); // Contenedor de evaluación/resultados
-const evaluationsContainer = document.getElementById('evaluations-container'); // Div interno
-// --- ¡NUEVA REFERENCIA PARA EL HISTORIAL! ---
+const evaluationSection = document.getElementById('evaluation-section');
+const evaluationsContainer = document.getElementById('evaluations-container');
 const historyListContainer = document.getElementById('history-list');
+
+// --- ¡NUEVO! REFERENCIAS PARA EL MODAL DE REVISIÓN ---
+const reviewModal = document.getElementById('review-modal');
+const reviewModalTitle = document.getElementById('review-modal-title');
+const closeReviewModalBtn = document.getElementById('close-review-modal-btn');
+const reviewContentContainer = document.getElementById('review-content-container');
 
 
 // --- GESTIÓN DEL ESTADO DE LA EVALUACIÓN Y DEL USUARIO ---
@@ -36,51 +41,125 @@ let studentData = {
     salaId: null
 };
 
-// --- ¡NUEVA LÓGICA PARA MOSTRAR HISTORIAL! ---
+
+// --- ¡NUEVO! LÓGICA DEL MODAL DE REVISIÓN ---
+
 /**
- * Consulta el historial de evaluaciones completadas por un estudiante y las muestra en la interfaz.
- * @param {string} studentId - El UID del estudiante que ha iniciado sesión.
+ * Cierra el modal de revisión de la evaluación.
  */
+const closeReviewModal = () => {
+    reviewModal.style.opacity = '0';
+    setTimeout(() => {
+        reviewModal.style.display = 'none';
+    }, 300); // Coincide con la transición de CSS
+};
+
+/**
+ * Abre el modal y muestra la revisión detallada de una evaluación completada.
+ * @param {string} resultId - El ID del documento del resultado en Firestore.
+ */
+const showReview = async (resultId) => {
+    reviewContentContainer.innerHTML = '<p>Cargando revisión...</p>';
+    reviewModal.style.display = 'flex';
+    setTimeout(() => reviewModal.style.opacity = '1', 10);
+
+    try {
+        // 1. Obtener los datos del resultado específico.
+        const resultDocRef = doc(db, "resultados", resultId);
+        const resultDocSnap = await getDoc(resultDocRef);
+
+        if (!resultDocSnap.exists()) {
+            reviewContentContainer.innerHTML = '<p>Error: No se encontró el resultado.</p>';
+            return;
+        }
+        const resultData = resultDocSnap.data();
+
+        // 2. Obtener los datos de la sala (preguntas, respuestas correctas, feedback).
+        const roomDocRef = doc(db, "salas", resultData.salaId);
+        const roomDocSnap = await getDoc(roomDocRef);
+
+        if (!roomDocSnap.exists()) {
+            reviewContentContainer.innerHTML = '<p>Error: La sala de esta evaluación ya no existe.</p>';
+            return;
+        }
+        const roomData = roomDocSnap.data();
+        reviewModalTitle.textContent = `Revisión de "${roomData.titulo}"`;
+
+        // 3. Construir el HTML de la revisión.
+        let reviewHTML = '';
+        const studentResponses = resultData.respuestas; // Array con las respuestas del estudiante
+        const questions = roomData.preguntas; // Array con las preguntas originales
+
+        questions.forEach((question, index) => {
+            const studentAnswer = studentResponses[index];
+            const correctAnswer = question.correcta;
+            const isCorrect = studentAnswer === correctAnswer;
+
+            // Construir las opciones, aplicando clases CSS dinámicamente
+            const optionsHTML = Object.entries(question.opciones).map(([key, value]) => {
+                let optionClass = 'review-option';
+                if (key === studentAnswer) {
+                    optionClass += ' student-answer';
+                }
+                if (key === correctAnswer) {
+                    optionClass += ' correct-answer';
+                }
+                return `<div class="${optionClass}"><strong>${key})</strong> ${value}</div>`;
+            }).join('');
+            
+            // Determinar qué feedback mostrar
+            const feedbackText = isCorrect ? question.feedbackCorrecto : question.feedbackIncorrecto;
+            const feedbackClass = isCorrect ? 'correct' : 'incorrect';
+
+            reviewHTML += `
+                <div class="review-question-item">
+                    <p class="review-question-text">${index + 1}. ${question.pregunta}</p>
+                    <div class="review-options-container">${optionsHTML}</div>
+                    ${feedbackText ? `<div class="review-feedback ${feedbackClass}">${feedbackText}</div>` : ''}
+                </div>
+            `;
+        });
+
+        reviewContentContainer.innerHTML = reviewHTML;
+
+    } catch (error) {
+        console.error("Error al mostrar la revisión:", error);
+        reviewContentContainer.innerHTML = '<p>Ocurrió un error al cargar la revisión.</p>';
+    }
+};
+
+
+// --- LÓGICA PARA MOSTRAR HISTORIAL (ACTUALIZADA) ---
 const displayStudentHistory = async (studentId) => {
-    // 1. Creamos la consulta a la colección 'resultados'.
-    // Buscamos todos los documentos donde el 'estudianteId' coincida con el del usuario actual.
     const q = query(collection(db, "resultados"), where("estudianteId", "==", studentId));
     
     try {
         const querySnapshot = await getDocs(q);
-
         if (querySnapshot.empty) {
             historyListContainer.innerHTML = '<p>Aún no has completado ninguna evaluación.</p>';
             return;
         }
-
-        historyListContainer.innerHTML = ''; // Limpiamos el mensaje de "cargando"
+        historyListContainer.innerHTML = '';
         
-        // 2. Iteramos sobre cada resultado encontrado.
-        // Usamos un bucle for...of para poder usar 'await' dentro y esperar a que cada consulta anidada termine.
         for (const resultDoc of querySnapshot.docs) {
             const resultData = resultDoc.data();
-            
-            // 3. Por cada resultado, necesitamos obtener el nombre de la evaluación.
-            // Para ello, usamos el 'salaId' guardado en el resultado para buscar el documento correspondiente en la colección 'salas'.
             const roomDocRef = doc(db, "salas", resultData.salaId);
             const roomDocSnap = await getDoc(roomDocRef);
 
-            let roomTitle = "Evaluación eliminada"; // Texto por defecto si la sala ya no existe
+            let roomTitle = "Evaluación (nombre no disponible)";
             if (roomDocSnap.exists()) {
                 roomTitle = roomDocSnap.data().titulo;
             }
 
-            // 4. Creamos el elemento HTML para el historial y lo añadimos al contenedor.
+            // ¡NUEVO! Se añade el atributo data-result-id con el ID del documento.
             const historyItem = `
-                <div class="history-item">
+                <div class="history-item" data-result-id="${resultDoc.id}">
                     <span class="history-item-title">${roomTitle}</span>
                     <span class="history-item-score">${resultData.calificacion} / ${resultData.totalPreguntas}</span>
                 </div>
             `;
             historyListContainer.innerHTML += historyItem;
         }
-
     } catch (error) {
         console.error("Error al obtener el historial:", error);
         historyListContainer.innerHTML = '<p>Ocurrió un error al cargar tu historial.</p>';
@@ -88,7 +167,7 @@ const displayStudentHistory = async (studentId) => {
 };
 
 
-// --- LÓGICA DE CALIFICACIÓN Y FINALIZACIÓN (Sin cambios) ---
+// --- LÓGICA DE CALIFICACIÓN Y FINALIZACIÓN ---
 const handleFinishEvaluation = async () => {
     saveCurrentAnswer();
     let score = 0;
@@ -118,20 +197,17 @@ const handleFinishEvaluation = async () => {
                     <span class="score">${score}</span>
                     <span class="total">de ${currentEvaluation.questions.length}</span>
                 </div>
+                <p style="margin-top: 1.5rem;">Ahora puedes ver la revisión detallada en tu historial.</p>
             </div>`;
-        evaluationSection.innerHTML = resultsHTML; // Mostramos el resultado en el contenedor principal
-        
-        // ¡ACTUALIZACIÓN IMPORTANTE!
-        // Después de finalizar, volvemos a cargar el historial para que se refleje la nueva evaluación completada.
+        evaluationSection.innerHTML = resultsHTML;
         await displayStudentHistory(studentData.uid);
-
     } catch (error) {
         console.error("Error al guardar el resultado:", error);
         alert("Ocurrió un error al guardar tu resultado.");
     }
 };
 
-// --- LÓGICA PARA RENDERIZAR LA EVALUACIÓN (Sin cambios sustanciales) ---
+// --- LÓGICA PARA RENDERIZAR LA EVALUACIÓN ---
 const saveCurrentAnswer = () => {
     const selectedOption = document.querySelector('input[name="question"]:checked');
     if (selectedOption) {
@@ -199,7 +275,7 @@ const handleJoinRoom = async (e) => {
     }
 };
 
-// --- FUNCIÓN DE INICIALIZACIÓN DEL PANEL (ACTUALIZADA) ---
+// --- FUNCIÓN DE INICIALIZACIÓN DEL PANEL ---
 const initializePanel = (userData) => {
     userNameElement.textContent = `Bienvenido, ${userData.nombre}`;
     studentData.uid = userData.uid;
@@ -216,7 +292,6 @@ const initializePanel = (userData) => {
 
     joinRoomForm.addEventListener('submit', handleJoinRoom);
 
-    // Se cambió el contenedor del listener para evitar conflictos
     evaluationSection.addEventListener('click', (e) => {
         if (e.target.id === 'next-btn') {
             saveCurrentAnswer();
@@ -233,12 +308,26 @@ const initializePanel = (userData) => {
         }
     });
     
-    // --- ¡LLAMADA A LA NUEVA FUNCIÓN! ---
-    // En cuanto el panel se inicializa, llamamos a la función para cargar el historial.
+    // --- ¡NUEVO! EVENT LISTENERS PARA EL MODAL ---
+    historyListContainer.addEventListener('click', (e) => {
+        const historyItem = e.target.closest('.history-item');
+        if (historyItem) {
+            const resultId = historyItem.dataset.resultId;
+            showReview(resultId);
+        }
+    });
+
+    closeReviewModalBtn.addEventListener('click', closeReviewModal);
+    reviewModal.addEventListener('click', (e) => {
+        if (e.target === reviewModal) { // Cierra si se hace clic en el fondo
+            closeReviewModal();
+        }
+    });
+
     displayStudentHistory(userData.uid);
 };
 
-// --- GUARDIÁN DE RUTA (Sin cambios) ---
+// --- GUARDIÁN DE RUTA ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         const userUid = user.uid;
@@ -246,22 +335,17 @@ onAuthStateChanged(auth, async (user) => {
         try {
             const userDocSnap = await getDoc(userDocRef);
             if (userDocSnap.exists()) {
-                const userData = userDocSnap.data();
-                userData.uid = userUid;
+                const userData = { ...userDocSnap.data(), uid: userUid };
                 if (userData.rol === 'estudiante') {
                     initializePanel(userData);
                 } else {
-                    alert("Acceso no autorizado. Esta página es solo para estudiantes.");
+                    alert("Acceso no autorizado.");
                     window.location.href = 'index.html';
                 }
-            } else {
-                window.location.href = 'login.html';
-            }
+            } else { window.location.href = 'login.html'; }
         } catch (error) {
-            console.error("Error al obtener los datos del usuario:", error);
+            console.error("Error al obtener datos:", error);
             window.location.href = 'login.html';
         }
-    } else {
-        window.location.href = 'login.html';
-    }
+    } else { window.location.href = 'login.html'; }
 });

@@ -1,6 +1,5 @@
 // js/docente.js
 
-// Importamos las funciones necesarias de Firebase.
 import { auth, db } from './firebase-config.js';
 import {
     onAuthStateChanged,
@@ -18,34 +17,32 @@ import {
     arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// --- REFERENCIAS A ELEMENTOS DEL DOM ---
+// --- DOM ELEMENT REFERENCES ---
 const userNameElement = document.getElementById('user-name');
 const logoutButton = document.getElementById('logout-button');
 const createRoomForm = document.getElementById('create-room-form');
 const roomsListContainer = document.getElementById('rooms-list');
 
-// --- REFERENCIAS PARA LAS VISTAS ---
+// --- VIEW REFERENCES ---
 const mainView = document.getElementById('main-view');
 const resultsView = document.getElementById('results-view');
 const resultsList = document.getElementById('results-list');
 const resultsTitle = document.getElementById('results-title');
-
-// --- REFERENCIAS PARA LA VISTA DE GESTIÓN DE PREGUNTAS ---
 const manageQuestionsView = document.getElementById('manage-questions-view');
 const questionsTitle = document.getElementById('questions-title');
 const questionsListContainer = document.getElementById('questions-list-container');
 const addNewQuestionBtn = document.getElementById('add-new-question-btn');
-const addFromBankBtn = document.getElementById('add-from-bank-btn'); // <-- NUEVO
+const addFromBankBtn = document.getElementById('add-from-bank-btn');
 
-// --- REFERENCIAS PARA EL MODAL DE PREGUNTAS ---
+// --- QUESTION MODAL REFERENCES ---
 const addQuestionModal = document.getElementById('add-question-modal');
 const addQuestionForm = document.getElementById('add-question-form');
 const modalTitle = document.getElementById('modal-title');
 const saveQuestionBtn = document.getElementById('save-question-btn');
 const cancelQuestionBtn = document.getElementById('cancel-question-btn');
-const saveToBankCheckbox = document.getElementById('save-to-bank'); // <-- NUEVO
+const saveToBankCheckbox = document.getElementById('save-to-bank');
 
-// --- ¡NUEVAS REFERENCIAS PARA EL MODAL DEL BANCO! ---
+// --- QUESTION BANK MODAL REFERENCES ---
 const bankModal = document.getElementById('bank-modal');
 const subjectFilter = document.getElementById('subject-filter');
 const bankQuestionsList = document.getElementById('bank-questions-list');
@@ -53,13 +50,13 @@ const cancelBankBtn = document.getElementById('cancel-bank-btn');
 const addSelectedQuestionsBtn = document.getElementById('add-selected-questions-btn');
 
 
-// --- VARIABLES DE ESTADO ---
+// --- STATE VARIABLES ---
 let currentRoomId = null;
-let currentUserId = null; // Guardaremos el UID del usuario aquí
-let editingQuestionIndex = null; // null para añadir, un número para editar
-let bankQuestionsCache = []; // <-- NUEVO: Caché para preguntas del banco
+let currentUserId = null;
+let editingQuestionIndex = null;
+let bankQuestionsCache = []; 
 
-// --- FUNCIÓN AUXILIAR PARA GENERAR CÓDIGO ---
+// --- HELPER FUNCTION ---
 const generateAccessCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
@@ -69,12 +66,12 @@ const generateAccessCode = () => {
     return code;
 };
 
-// --- GESTIÓN DEL MODAL AÑADIR/EDITAR PREGUNTA ---
+// --- ADD/EDIT QUESTION MODAL MANAGEMENT ---
 const openAddQuestionModal = () => {
     editingQuestionIndex = null;
     modalTitle.textContent = 'Añadir Nueva Pregunta';
     saveQuestionBtn.textContent = 'Guardar Pregunta';
-    saveToBankCheckbox.parentElement.style.display = 'flex'; // Mostrar opción
+    saveToBankCheckbox.parentElement.style.display = 'flex';
     addQuestionForm.reset();
     addQuestionModal.style.display = 'flex';
 };
@@ -83,7 +80,7 @@ const openEditQuestionModal = (question, index) => {
     editingQuestionIndex = index;
     modalTitle.textContent = 'Editar Pregunta';
     saveQuestionBtn.textContent = 'Guardar Cambios';
-    saveToBankCheckbox.parentElement.style.display = 'none'; // Ocultar en modo edición
+    saveToBankCheckbox.parentElement.style.display = 'none';
     
     addQuestionForm.querySelector('#question-text').value = question.pregunta;
     addQuestionForm.querySelector('#option-a').value = question.opciones.A;
@@ -103,7 +100,7 @@ const closeAddQuestionModal = () => {
     editingQuestionIndex = null;
 };
 
-// --- ¡NUEVA GESTIÓN DEL MODAL DEL BANCO! ---
+// --- QUESTION BANK MODAL MANAGEMENT ---
 const openBankModal = async () => {
     bankQuestionsList.innerHTML = '<p>Cargando preguntas...</p>';
     bankModal.style.display = 'flex';
@@ -111,9 +108,8 @@ const openBankModal = async () => {
     const q = query(collection(db, "bancoPreguntas"), where("docenteId", "==", currentUserId));
     const querySnapshot = await getDocs(q);
 
-    bankQuestionsCache = querySnapshot.docs.map(doc => doc.data());
+    bankQuestionsCache = querySnapshot.docs.map(doc => ({...doc.data(), id: doc.id}));
 
-    // Poblar filtro de materias
     const materias = [...new Set(bankQuestionsCache.map(q => q.materia))];
     subjectFilter.innerHTML = '<option value="all">Todas las materias</option>';
     materias.forEach(materia => {
@@ -128,25 +124,24 @@ const closeBankModal = () => {
 };
 
 const renderBankQuestions = (filter) => {
-    const questionsToRender = filter === 'all' 
+    const filteredQuestions = filter === 'all' 
         ? bankQuestionsCache 
         : bankQuestionsCache.filter(q => q.materia === filter);
 
-    if (questionsToRender.length === 0) {
+    if (filteredQuestions.length === 0) {
         bankQuestionsList.innerHTML = '<p>No tienes preguntas en tu banco para esta materia.</p>';
         return;
     }
 
-    bankQuestionsList.innerHTML = questionsToRender.map((q, index) => `
+    bankQuestionsList.innerHTML = filteredQuestions.map((q, index) => `
         <div class="bank-question-item">
-            <input type="checkbox" id="bank-q-${index}" data-question-index="${index}">
-            <label for="bank-q-${index}">${q.pregunta}</label>
+            <input type="checkbox" id="bank-q-${q.id}" data-question-id="${q.id}">
+            <label for="bank-q-${q.id}">${q.pregunta}</label>
         </div>
     `).join('');
 };
 
-// --- LÓGICA CRUD PARA PREGUNTAS ---
-
+// --- QUESTION CRUD LOGIC ---
 const handleQuestionSubmit = async (e) => {
     e.preventDefault();
     if (!currentRoomId || !currentUserId) return;
@@ -155,7 +150,7 @@ const handleQuestionSubmit = async (e) => {
     const roomDocSnap = await getDoc(roomDocRef);
     const roomData = roomDocSnap.data();
 
-    const nuevaPregunta = {
+    const newQuestionData = {
         pregunta: addQuestionForm.querySelector('#question-text').value,
         opciones: {
             A: addQuestionForm.querySelector('#option-a').value,
@@ -169,37 +164,34 @@ const handleQuestionSubmit = async (e) => {
     };
 
     try {
-        // --- LÓGICA MODIFICADA ---
-        // 1. Guardar en el banco si está marcado (solo en modo "añadir")
         if (saveToBankCheckbox.checked && editingQuestionIndex === null) {
             await addDoc(collection(db, "bancoPreguntas"), {
-                ...nuevaPregunta,
+                ...newQuestionData,
                 docenteId: currentUserId,
                 materia: roomData.materia 
             });
         }
 
-        // 2. Actualizar la sala (lógica existente)
-        let preguntasActualizadas = [...roomData.preguntas];
-        if (editingQuestionIndex !== null) { // Modo Editar
-            preguntasActualizadas[editingQuestionIndex] = nuevaPregunta;
-        } else { // Modo Añadir
-            preguntasActualizadas.push(nuevaPregunta);
+        let updatedQuestions = [...roomData.preguntas];
+        if (editingQuestionIndex !== null) {
+            updatedQuestions[editingQuestionIndex] = newQuestionData;
+        } else {
+            updatedQuestions.push(newQuestionData);
         }
 
-        await updateDoc(roomDocRef, { preguntas: preguntasActualizadas });
+        await updateDoc(roomDocRef, { preguntas: updatedQuestions });
         
         alert(editingQuestionIndex !== null ? "¡Pregunta actualizada!" : "¡Pregunta añadida!");
         closeAddQuestionModal();
         await displayQuestionsForRoom(currentRoomId);
     } catch (error) {
-        console.error("Error al guardar la pregunta:", error);
+        console.error("Error saving question:", error);
         alert("Ocurrió un error al guardar la pregunta.");
     }
 };
 
 const handleDeleteQuestion = async (index) => {
-    if (!confirm('¿Estás seguro?')) return;
+    if (!confirm('¿Estás seguro de que quieres eliminar esta pregunta?')) return;
     if (!currentRoomId) return;
 
     try {
@@ -207,19 +199,18 @@ const handleDeleteQuestion = async (index) => {
         const roomDocSnap = await getDoc(roomDocRef);
         const roomData = roomDocSnap.data();
         
-        const preguntasActualizadas = roomData.preguntas.filter((_, i) => i !== index);
+        const updatedQuestions = roomData.preguntas.filter((_, i) => i !== index);
 
-        await updateDoc(roomDocRef, { preguntas: preguntasActualizadas });
+        await updateDoc(roomDocRef, { preguntas: updatedQuestions });
         
-        alert("¡Pregunta eliminada!");
+        alert("¡Pregunta eliminada con éxito!");
         await displayQuestionsForRoom(currentRoomId);
     } catch (error) {
-        console.error("Error al eliminar:", error);
-        alert("Ocurrió un error.");
+        console.error("Error deleting question:", error);
+        alert("Ocurrió un error al eliminar la pregunta.");
     }
 };
 
-// --- ¡NUEVA LÓGICA PARA AÑADIR DESDE EL BANCO! ---
 const handleAddFromBank = async () => {
     const selectedCheckboxes = bankQuestionsList.querySelectorAll('input[type="checkbox"]:checked');
     if (selectedCheckboxes.length === 0) {
@@ -228,8 +219,9 @@ const handleAddFromBank = async () => {
     }
 
     const questionsToAdd = Array.from(selectedCheckboxes).map(cb => {
-        const index = parseInt(cb.dataset.questionIndex);
-        return bankQuestionsCache[index];
+        const questionId = cb.dataset.questionId;
+        const { id, docenteId, ...questionData } = bankQuestionsCache.find(q => q.id === questionId);
+        return questionData;
     });
 
     try {
@@ -240,20 +232,16 @@ const handleAddFromBank = async () => {
 
         alert(`¡${questionsToAdd.length} pregunta(s) añadida(s) con éxito!`);
         closeBankModal();
-        await displayQuestionsForRoom(currentRoomId); // Refrescar vista
+        await displayQuestionsForRoom(currentRoomId);
     } catch (error) {
-        console.error("Error al añadir preguntas desde el banco:", error);
+        console.error("Error adding questions from bank:", error);
         alert("Ocurrió un error al añadir las preguntas.");
     }
 };
 
-
-// --- GESTIÓN DE VISTAS Y RENDERIZADO ---
-
+// --- VIEW MANAGEMENT & RENDERING ---
 const switchToView = (viewToShow) => {
-    mainView.style.display = 'none';
-    resultsView.style.display = 'none';
-    manageQuestionsView.style.display = 'none';
+    [mainView, resultsView, manageQuestionsView].forEach(view => view.style.display = 'none');
     viewToShow.style.display = 'block';
 };
 
@@ -288,9 +276,8 @@ const displayQuestionsForRoom = async (roomId) => {
         }
 
         switchToView(manageQuestionsView);
-
     } catch (error) {
-        console.error("Error al cargar las preguntas:", error);
+        console.error("Error loading room questions:", error);
     }
 };
 
@@ -302,20 +289,20 @@ const handleShowResults = async (roomId, roomTitle) => {
     try {
         const querySnapshot = await getDocs(q);
         resultsList.innerHTML = querySnapshot.empty
-            ? '<p>Aún no hay resultados.</p>'
+            ? '<p>Aún no hay resultados para esta evaluación.</p>'
             : querySnapshot.docs.map(doc => {
                 const result = doc.data();
-                return `<div class="result-item"><span>${result.nombreEstudiante}</span><span class="result-item-score">${result.calificacion} / ${result.totalPreguntas}</span></div>`;
+                return `<div class="result-item"><span class="result-item-name">${result.nombreEstudiante}</span><span class="result-item-score">${result.calificacion} / ${result.totalPreguntas}</span></div>`;
             }).join('');
     } catch (error) {
-        console.error("Error al obtener resultados:", error);
-        resultsList.innerHTML = '<p>Ocurrió un error al cargar.</p>';
+        console.error("Error fetching results:", error);
+        resultsList.innerHTML = '<p>Ocurrió un error al cargar los resultados.</p>';
     }
     switchToView(resultsView);
 };
 
 const displayTeacherRooms = async (userId) => {
-    roomsListContainer.innerHTML = '';
+    roomsListContainer.innerHTML = '<p>Cargando salas...</p>';
     const q = query(collection(db, "salas"), where("docenteId", "==", userId));
     try {
         const querySnapshot = await getDocs(q);
@@ -323,21 +310,22 @@ const displayTeacherRooms = async (userId) => {
             roomsListContainer.innerHTML = '<p>Aún no has creado ninguna sala.</p>';
             return;
         }
+        roomsListContainer.innerHTML = '';
         querySnapshot.forEach((doc) => {
             const room = doc.data();
             const roomId = doc.id;
-            const roomCard = `
-                <div class="room-card">
-                    <div><h3>${room.titulo}</h3><p>Materia: ${room.materia}</p><div class="room-code">Código: <span>${room.codigoAcceso}</span></div></div>
-                    <div class="room-actions">
-                        <button class="manage-button" data-room-id="${roomId}">Gestionar Evaluación</button>
-                        <button class="view-results-button" data-room-id="${roomId}" data-room-title="${room.titulo}">Ver Resultados</button>
-                    </div>
+            const roomCard = document.createElement('div');
+            roomCard.className = 'room-card';
+            roomCard.innerHTML = `
+                <div><h3>${room.titulo}</h3><p>Materia: ${room.materia}</p><div class="room-code">Código: <span>${room.codigoAcceso}</span></div></div>
+                <div class="room-actions">
+                    <button class="manage-button" data-room-id="${roomId}">Gestionar Evaluación</button>
+                    <button class="view-results-button" data-room-id="${roomId}" data-room-title="${room.titulo}">Ver Resultados</button>
                 </div>`;
-            roomsListContainer.innerHTML += roomCard;
+            roomsListContainer.appendChild(roomCard);
         });
     } catch (error) {
-        console.error("Error al obtener las salas:", error);
+        console.error("Error fetching rooms:", error);
         roomsListContainer.innerHTML = '<p>Ocurrió un error al cargar tus salas.</p>';
     }
 };
@@ -356,24 +344,25 @@ const handleCreateRoom = async (e, userId) => {
             codigoAcceso: accessCode,
             preguntas: []
         });
-        alert(`¡Sala creada!\nCódigo de acceso: ${accessCode}`);
+        alert(`¡Sala "${title}" creada con éxito!\nCódigo de acceso: ${accessCode}`);
         createRoomForm.reset();
         await displayTeacherRooms(userId);
     } catch (error) {
-        console.error("Error al crear la sala:", error);
+        console.error("Error creating room:", error);
+        alert("Ocurrió un error al crear la sala.");
     }
 };
 
-// --- INICIALIZACIÓN DEL PANEL ---
+// --- PANEL INITIALIZATION ---
 const initializePanel = (userData) => {
     userNameElement.textContent = `Bienvenido, ${userData.nombre}`;
-    currentUserId = userData.uid; // <-- IMPORTANTE: Guardar el UID
+    currentUserId = userData.uid;
 
     logoutButton.addEventListener('click', async () => {
         try {
             await signOut(auth);
             window.location.href = 'login.html';
-        } catch (error) { console.error("Error al cerrar sesión:", error); }
+        } catch (error) { console.error("Error signing out:", error); }
     });
 
     createRoomForm.addEventListener('submit', (e) => handleCreateRoom(e, userData.uid));
@@ -396,7 +385,6 @@ const initializePanel = (userData) => {
     addQuestionForm.addEventListener('submit', handleQuestionSubmit);
     cancelQuestionBtn.addEventListener('click', closeAddQuestionModal);
 
-    // --- ¡NUEVOS EVENT LISTENERS! ---
     addFromBankBtn.addEventListener('click', openBankModal);
     cancelBankBtn.addEventListener('click', closeBankModal);
     subjectFilter.addEventListener('change', (e) => renderBankQuestions(e.target.value));
@@ -405,15 +393,14 @@ const initializePanel = (userData) => {
     displayTeacherRooms(userData.uid);
 };
 
-// --- GUARDIÁN DE RUTA ---
+// --- ROUTE GUARD ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        const userUid = user.uid;
-        const userDocRef = doc(db, "users", userUid);
+        const userDocRef = doc(db, "users", user.uid);
         try {
             const userDocSnap = await getDoc(userDocRef);
             if (userDocSnap.exists()) {
-                const userData = { ...userDocSnap.data(), uid: userUid };
+                const userData = { ...userDocSnap.data(), uid: user.uid };
                 if (userData.rol === 'docente') {
                     initializePanel(userData);
                 } else {
@@ -422,7 +409,7 @@ onAuthStateChanged(auth, async (user) => {
                 }
             } else { window.location.href = 'login.html'; }
         } catch (error) {
-            console.error("Error al obtener datos:", error);
+            console.error("Error fetching user data:", error);
             window.location.href = 'login.html';
         }
     } else { window.location.href = 'login.html'; }
