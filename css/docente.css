@@ -87,16 +87,19 @@ body {
     margin-bottom: 0.5rem;
 }
 
-.input-group input {
+.input-group input,
+.input-group textarea {
     width: 100%;
     padding: 0.75rem 1rem;
     border-radius: 8px;
     border: 2px solid var(--color-border);
     font-size: 1rem;
+    font-family: var(--font-family);
     transition: border-color var(--transition-speed);
 }
 
-.input-group input:focus {
+.input-group input:focus,
+.input-group textarea:focus {
     outline: none;
     border-color: var(--color-secondary);
 }
@@ -203,7 +206,7 @@ body {
 }
 
 
-/* --- NUEVOS ESTILOS PARA LA VISTA DE RESULTADOS --- */
+/* --- ESTILOS PARA LA VISTA DE RESULTADOS --- */
 .results-header {
     display: flex;
     justify-content: space-between;
@@ -244,3 +247,76 @@ body {
     padding: 0.4rem 0.8rem;
     border-radius: 6px;
 }
+
+/* === INICIO DE NUEVOS ESTILOS PARA EL MODAL === */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(28, 42, 75, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease;
+}
+
+.modal-content {
+    background: var(--color-surface);
+    padding: 2.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.95);
+    transition: transform var(--transition-speed) ease;
+}
+
+/* Estilos para cuando el modal está activo */
+.modal-overlay.active {
+    opacity: 1;
+}
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-content h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.options-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.correct-answer-selector {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+.correct-answer-selector label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.modal-actions {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.modal-actions .cta-button {
+    width: auto;
+    padding: 0.8rem 2rem;
+}
+/* === FIN DE NUEVOS ESTILOS PARA EL MODAL === */

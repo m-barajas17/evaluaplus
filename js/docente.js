@@ -24,14 +24,20 @@ const logoutButton = document.getElementById('logout-button');
 const createRoomForm = document.getElementById('create-room-form');
 const roomsListContainer = document.getElementById('rooms-list');
 
-// --- ¡NUEVAS REFERENCIAS PARA LAS VISTAS! ---
-// Estas nos permitirán cambiar fácilmente entre la vista principal y la de resultados.
+// --- REFERENCIAS PARA LAS VISTAS ---
 const mainView = document.getElementById('main-view');
 const resultsView = document.getElementById('results-view');
 const resultsList = document.getElementById('results-list');
 const resultsTitle = document.getElementById('results-title');
 const backToMainViewBtn = document.getElementById('back-to-main-view-btn');
 
+// --- ¡NUEVAS REFERENCIAS PARA EL MODAL DE PREGUNTAS! ---
+const addQuestionModal = document.getElementById('add-question-modal');
+const addQuestionForm = document.getElementById('add-question-form');
+const cancelQuestionBtn = document.getElementById('cancel-question-btn');
+
+// --- Variable para guardar el ID de la sala actual ---
+let currentRoomId = null;
 
 // --- FUNCIÓN AUXILIAR PARA GENERAR CÓDIGO ---
 const generateAccessCode = () => {
@@ -43,61 +49,81 @@ const generateAccessCode = () => {
     return code;
 };
 
-// --- LÓGICA PARA AÑADIR PREGUNTAS (Sin cambios) ---
-const handleAddQuestion = async (roomId) => {
-    const preguntaTexto = prompt("Introduce el texto de la pregunta:");
-    if (!preguntaTexto) return;
-    const opcionA = prompt("Introduce la Opción A:");
-    if (!opcionA) return;
-    const opcionB = prompt("Introduce la Opción B:");
-    if (!opcionB) return;
-    const opcionC = prompt("Introduce la Opción C:");
-    if (!opcionC) return;
-    const opcionD = prompt("Introduce la Opción D:");
-    if (!opcionD) return;
+// --- ¡NUEVA LÓGICA PARA GESTIONAR EL MODAL! ---
+/**
+ * Abre el modal para añadir una pregunta y guarda el ID de la sala.
+ * @param {string} roomId - El ID del documento de la sala.
+ */
+const openAddQuestionModal = (roomId) => {
+    currentRoomId = roomId; // Guardamos el ID de la sala
+    addQuestionModal.style.display = 'flex';
+    setTimeout(() => {
+        addQuestionModal.classList.add('active');
+    }, 10); // Pequeño delay para que la transición CSS funcione
+};
 
-    let respuestaCorrecta = '';
-    const respuestasValidas = ['A', 'B', 'C', 'D'];
-    while (!respuestasValidas.includes(respuestaCorrecta)) {
-        const input = prompt("¿Cuál es la respuesta correcta? (A, B, C, o D)");
-        if (input === null) return;
-        respuestaCorrecta = input.trim().toUpperCase();
-        if (!respuestasValidas.includes(respuestaCorrecta)) {
-            alert("Respuesta inválida. Por favor, introduce solo la letra A, B, C, o D.");
-        }
+/**
+ * Cierra el modal y limpia el formulario.
+ */
+const closeAddQuestionModal = () => {
+    addQuestionModal.classList.remove('active');
+    setTimeout(() => {
+        addQuestionModal.style.display = 'none';
+        addQuestionForm.reset();
+        currentRoomId = null; // Limpiamos el ID
+    }, 300); // Coincide con la duración de la transición en CSS
+};
+
+
+// --- ¡LÓGICA DE AÑADIR PREGUNTAS REFACTORIZADA! ---
+/**
+ * Gestiona el envío del formulario del modal para añadir una nueva pregunta.
+ * @param {Event} e - El evento de envío del formulario.
+ */
+const handleAddQuestionSubmit = async (e) => {
+    e.preventDefault();
+    if (!currentRoomId) {
+        console.error("No se ha especificado un ID de sala.");
+        return;
     }
 
+    // Recopilamos todos los datos del formulario del modal
+    const preguntaTexto = addQuestionForm.querySelector('#question-text').value;
+    const opcionA = addQuestionForm.querySelector('#option-a').value;
+    const opcionB = addQuestionForm.querySelector('#option-b').value;
+    const opcionC = addQuestionForm.querySelector('#option-c').value;
+    const opcionD = addQuestionForm.querySelector('#option-d').value;
+    const respuestaCorrecta = addQuestionForm.querySelector('input[name="correct-answer"]:checked').value;
+    const feedbackCorrecto = addQuestionForm.querySelector('#feedback-correct').value;
+    const feedbackIncorrecto = addQuestionForm.querySelector('#feedback-incorrect').value;
+
+    // Creamos el nuevo objeto de pregunta con la estructura actualizada
     const nuevaPregunta = {
         pregunta: preguntaTexto,
         opciones: { A: opcionA, B: opcionB, C: opcionC, D: opcionD },
-        correcta: respuestaCorrecta
+        correcta: respuestaCorrecta,
+        feedbackCorrecto: feedbackCorrecto || "¡Respuesta Correcta!", // Feedback por defecto
+        feedbackIncorrecto: feedbackIncorrecto || `La respuesta correcta era ${respuestaCorrecta}.` // Feedback por defecto
     };
 
     try {
-        const roomDocRef = doc(db, "salas", roomId);
+        const roomDocRef = doc(db, "salas", currentRoomId);
         await updateDoc(roomDocRef, {
             preguntas: arrayUnion(nuevaPregunta)
         });
         alert("¡Pregunta añadida con éxito!");
+        closeAddQuestionModal(); // Cerramos el modal tras el éxito
     } catch (error) {
         console.error("Error al añadir la pregunta:", error);
         alert("Ocurrió un error al guardar la pregunta. Inténtalo de nuevo.");
     }
 };
 
-// --- ¡NUEVA LÓGICA PARA MOSTRAR RESULTADOS! ---
-/**
- * Consulta y muestra los resultados de una sala de evaluación específica.
- * @param {string} roomId - El ID del documento de la sala.
- * @param {string} roomTitle - El título de la sala para mostrarlo en la vista.
- */
-const handleShowResults = async (roomId, roomTitle) => {
-    // 1. Preparamos la interfaz
-    resultsTitle.textContent = `Resultados de "${roomTitle}"`; // Ponemos el título correcto
-    resultsList.innerHTML = '<p>Cargando resultados...</p>'; // Mensaje de carga
 
-    // 2. Creamos la consulta a la colección 'resultados'
-    // Buscamos todos los documentos donde el campo 'salaId' sea igual al ID de la sala seleccionada.
+// --- LÓGICA PARA MOSTRAR RESULTADOS (Sin cambios) ---
+const handleShowResults = async (roomId, roomTitle) => {
+    resultsTitle.textContent = `Resultados de "${roomTitle}"`;
+    resultsList.innerHTML = '<p>Cargando resultados...</p>';
     const q = query(collection(db, "resultados"), where("salaId", "==", roomId));
 
     try {
@@ -106,18 +132,15 @@ const handleShowResults = async (roomId, roomTitle) => {
         if (querySnapshot.empty) {
             resultsList.innerHTML = '<p>Aún no hay resultados para esta evaluación.</p>';
         } else {
-            // Si hay resultados, limpiamos el contenedor y los procesamos
             resultsList.innerHTML = '';
             querySnapshot.forEach(doc => {
                 const result = doc.data();
-                // Creamos un elemento HTML para cada resultado
                 const resultItem = `
                     <div class="result-item">
                         <span class="result-item-name">${result.nombreEstudiante}</span>
                         <span class="result-item-score">${result.calificacion} / ${result.totalPreguntas}</span>
                     </div>
                 `;
-                // Lo añadimos a la lista
                 resultsList.innerHTML += resultItem;
             });
         }
@@ -126,13 +149,12 @@ const handleShowResults = async (roomId, roomTitle) => {
         resultsList.innerHTML = '<p>Ocurrió un error al cargar los resultados.</p>';
     }
 
-    // 3. Mostramos la vista de resultados y ocultamos la principal
     mainView.style.display = 'none';
     resultsView.style.display = 'block';
 };
 
 
-// --- LÓGICA DE VISUALIZACIÓN DE SALAS (ACTUALIZADA) ---
+// --- LÓGICA DE VISUALIZACIÓN DE SALAS (Sin cambios) ---
 const displayTeacherRooms = async (userId) => {
     roomsListContainer.innerHTML = '';
     const q = query(collection(db, "salas"), where("docenteId", "==", userId));
@@ -149,9 +171,6 @@ const displayTeacherRooms = async (userId) => {
             const room = doc.data();
             const roomId = doc.id;
 
-            // --- ¡HTML DE LA TARJETA ACTUALIZADO! ---
-            // Añadimos el nuevo botón "Ver Resultados" y envolvemos los botones en un div.
-            // Pasamos tanto el ID como el título a los botones para usarlos después.
             const roomCard = `
                 <div class="room-card">
                     <div>
@@ -217,16 +236,13 @@ const initializePanel = (userData) => {
 
     createRoomForm.addEventListener('submit', (e) => handleCreateRoom(e, userData.uid));
 
-    // --- ¡EVENT LISTENER POR DELEGACIÓN ACTUALIZADO! ---
-    // Ahora gestiona los clics para ambos botones.
+    // Event listener para los botones de las tarjetas de sala
     roomsListContainer.addEventListener('click', (e) => {
         const target = e.target;
-        // Si se hace clic en el botón de gestionar
         if (target.classList.contains('manage-button')) {
             const roomId = target.dataset.roomId;
-            handleAddQuestion(roomId);
+            openAddQuestionModal(roomId); // ¡Ahora abre el modal!
         }
-        // Si se hace clic en el botón de ver resultados
         if (target.classList.contains('view-results-button')) {
             const roomId = target.dataset.roomId;
             const roomTitle = target.dataset.roomTitle;
@@ -234,7 +250,16 @@ const initializePanel = (userData) => {
         }
     });
     
-    // --- ¡NUEVO EVENT LISTENER PARA EL BOTÓN DE VOLVER! ---
+    // --- ¡NUEVOS EVENT LISTENERS PARA EL MODAL! ---
+    addQuestionForm.addEventListener('submit', handleAddQuestionSubmit);
+    cancelQuestionBtn.addEventListener('click', closeAddQuestionModal);
+    addQuestionModal.addEventListener('click', (e) => {
+        // Cierra el modal si se hace clic en el overlay de fondo
+        if (e.target === addQuestionModal) {
+            closeAddQuestionModal();
+        }
+    });
+
     backToMainViewBtn.addEventListener('click', () => {
         resultsView.style.display = 'none';
         mainView.style.display = 'block';

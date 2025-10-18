@@ -60,7 +60,63 @@
         </div>
 
     </main>
+    
+    <div id="add-question-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <form id="add-question-form">
+                <h2>Añadir Nueva Pregunta</h2>
+                
+                <div class="input-group">
+                    <label for="question-text">Texto de la Pregunta</label>
+                    <textarea id="question-text" rows="3" required></textarea>
+                </div>
 
+                <div class="options-group">
+                    <div class="input-group">
+                        <label for="option-a">Opción A</label>
+                        <input type="text" id="option-a" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="option-b">Opción B</label>
+                        <input type="text" id="option-b" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="option-c">Opción C</label>
+                        <input type="text" id="option-c" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="option-d">Opción D</label>
+                        <input type="text" id="option-d" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Respuesta Correcta</label>
+                    <div class="correct-answer-selector">
+                        <label><input type="radio" name="correct-answer" value="A" checked> A</label>
+                        <label><input type="radio" name="correct-answer" value="B"> B</label>
+                        <label><input type="radio" name="correct-answer" value="C"> C</label>
+                        <label><input type="radio" name="correct-answer" value="D"> D</label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="feedback-correct">Feedback (si la respuesta es correcta)</label>
+                    <textarea id="feedback-correct" rows="2" placeholder="Ej: ¡Correcto! Esta es la razón..."></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="feedback-incorrect">Feedback (si la respuesta es incorrecta)</label>
+                    <textarea id="feedback-incorrect" rows="2" placeholder="Ej: La respuesta correcta es C porque..."></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancel-question-btn" class="cta-button secondary">Cancelar</button>
+                    <button type="submit" class="cta-button">Guardar Pregunta</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/docente.js"></script>
 </body>
