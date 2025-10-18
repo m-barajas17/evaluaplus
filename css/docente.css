@@ -136,6 +136,8 @@ body {
     border: 1px solid var(--color-border);
     padding: 1.5rem;
     border-radius: 12px;
+    display: flex;
+    flex-direction: column;
 }
 
 .room-card h3 {
@@ -157,13 +159,21 @@ body {
     font-family: monospace;
     font-size: 1.1rem;
     text-align: center;
+    margin-bottom: 1rem;
 }
 
-.manage-button {
+/* Contenedor para los botones de acción de la tarjeta */
+.room-actions {
+    margin-top: auto; /* Empuja los botones al final de la tarjeta */
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* Espacio entre botones */
+}
+
+.manage-button, .view-results-button {
     background-color: var(--color-secondary);
     color: var(--color-surface);
     width: 100%;
-    margin-top: 1rem; /* Espacio para separarlo del código de acceso */
     padding: 0.7rem 1.5rem;
     border-radius: 8px;
     text-decoration: none;
@@ -174,8 +184,63 @@ body {
     transition: all var(--transition-speed) ease;
 }
 
-.manage-button:hover {
+.manage-button:hover, .view-results-button:hover {
     transform: translateY(-2px);
-    background-color: #2b257a; /* Un tono ligeramente más oscuro al pasar el mouse */
+    background-color: #2b257a;
     box-shadow: 0 4px 10px rgba(55, 48, 163, 0.2);
+}
+
+/* Estilo específico para el botón de resultados para diferenciarlo visualmente */
+.view-results-button {
+    background-color: transparent;
+    color: var(--color-secondary);
+    border: 2px solid var(--color-secondary);
+}
+
+.view-results-button:hover {
+    background-color: #EEF2FF;
+    color: var(--color-secondary);
+}
+
+
+/* --- NUEVOS ESTILOS PARA LA VISTA DE RESULTADOS --- */
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.results-header h2 {
+    border-bottom: none; /* Quitamos el borde duplicado */
+    margin-bottom: 0;
+}
+
+.results-header .cta-button {
+    width: auto; /* Hacemos que el botón no ocupe todo el ancho */
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.result-item-name {
+    font-weight: 600;
+}
+
+.result-item-score {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-secondary);
+    background-color: #EEF2FF;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
 }

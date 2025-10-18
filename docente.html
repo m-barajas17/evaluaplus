@@ -23,27 +23,42 @@
     </header>
 
     <main class="main-container">
-        <section class="card">
-            <h2>Crear Nueva Sala de Evaluación</h2>
-            <form id="create-room-form">
-                <div class="input-group">
-                    <label for="title">Título de la Evaluación</label>
-                    <input type="text" id="title" name="title" placeholder="Ej: Examen Parcial de Álgebra" required>
-                </div>
-                <div class="input-group">
-                    <label for="subject">Materia</label>
-                    <input type="text" id="subject" name="subject" placeholder="Ej: Matemáticas" required>
-                </div>
-                <button type="submit" class="cta-button">Crear Sala</button>
-            </form>
-        </section>
 
-        <section class="card">
-            <h2>Mis Salas Creadas</h2>
-            <div id="rooms-list" class="rooms-grid">
-                <p>Aún no has creado ninguna sala.</p>
-            </div>
-        </section>
+        <div id="main-view">
+            <section class="card">
+                <h2>Crear Nueva Sala de Evaluación</h2>
+                <form id="create-room-form">
+                    <div class="input-group">
+                        <label for="title">Título de la Evaluación</label>
+                        <input type="text" id="title" name="title" placeholder="Ej: Examen Parcial de Álgebra" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="subject">Materia</label>
+                        <input type="text" id="subject" name="subject" placeholder="Ej: Matemáticas" required>
+                    </div>
+                    <button type="submit" class="cta-button">Crear Sala</button>
+                </form>
+            </section>
+
+            <section class="card">
+                <h2>Mis Salas Creadas</h2>
+                <div id="rooms-list" class="rooms-grid">
+                    <p>Aún no has creado ninguna sala.</p>
+                </div>
+            </section>
+        </div>
+
+        <div id="results-view" style="display: none;">
+            <section class="card">
+                <div class="results-header">
+                    <h2 id="results-title">Resultados de la Evaluación</h2>
+                    <button id="back-to-main-view-btn" class="cta-button secondary">Volver</button>
+                </div>
+                <div id="results-list">
+                    </div>
+            </section>
+        </div>
+
     </main>
 
     <script type="module" src="js/firebase-config.js"></script>
