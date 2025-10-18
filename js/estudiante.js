@@ -1,150 +1,236 @@
 // js/estudiante.js
 
-// Importamos los servicios de Firebase que vamos a necesitar.
-// onAuthStateChanged para saber si hay una sesión activa.
-// signOut para el botón de cerrar sesión.
 import { auth, db } from './firebase-config.js';
-import { 
+import {
     onAuthStateChanged,
-    signOut 
+    signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-// Importamos las funciones de Firestore para consultar la base de datos.
-// doc y getDoc para leer el documento del usuario.
-// collection, query, where, getDocs para buscar la sala por su código.
-import { 
+import {
     doc,
     getDoc,
     collection,
     query,
     where,
-    getDocs
+    getDocs,
+    // --- ¡NUEVA IMPORTACIÓN! ---
+    // addDoc nos permite crear un nuevo documento en una colección.
+    // Lo usaremos para guardar el resultado de la evaluación.
+    addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-
-// --- PASO 3: REFERENCIAS A ELEMENTOS DEL DOM ---
-// Obtenemos las referencias a los elementos HTML con los que vamos a interactuar.
+// --- REFERENCIAS A ELEMENTOS DEL DOM ---
 const userNameElement = document.getElementById('user-name');
 const logoutButton = document.getElementById('logout-button');
 const joinRoomForm = document.getElementById('join-room-form');
+const joinRoomSection = document.getElementById('join-room-section');
+const evaluationsContainer = document.getElementById('joined-rooms-list');
+
+// --- GESTIÓN DEL ESTADO DE LA EVALUACIÓN Y DEL USUARIO ---
+let currentEvaluation = null;
+let currentQuestionIndex = 0;
+let studentAnswers = [];
+// Guardaremos los datos del estudiante para usarlos al final.
+let studentData = {
+    uid: null,
+    nombre: null,
+    salaId: null // Guardaremos el ID de la sala aquí.
+};
 
 
-// --- PASO 4: LÓGICA PRINCIPAL ---
+// --- LÓGICA DE CALIFICACIÓN Y FINALIZACIÓN ---
 
-// Función que se ejecutará cuando el estudiante intente unirse a una sala.
+/**
+ * Se ejecuta cuando el estudiante hace clic en "Finalizar Evaluación".
+ * Calcula la calificación, la guarda en Firestore y muestra el resultado.
+ */
+const handleFinishEvaluation = async () => {
+    // 1. Guardamos la respuesta de la última pregunta.
+    saveCurrentAnswer();
+
+    // 2. Calculamos la puntuación.
+    let score = 0;
+    currentEvaluation.questions.forEach((question, index) => {
+        // Comparamos la respuesta correcta de la pregunta con la guardada.
+        if (question.correcta === studentAnswers[index]) {
+            score++;
+        }
+    });
+
+    // 3. Preparamos el objeto de resultado para guardarlo.
+    const resultData = {
+        salaId: studentData.salaId,
+        estudianteId: studentData.uid,
+        nombreEstudiante: studentData.nombre,
+        calificacion: score,
+        totalPreguntas: currentEvaluation.questions.length,
+        // Guardamos las respuestas para futura referencia o revisión.
+        respuestas: studentAnswers,
+        fecha: new Date() // Guardamos la fecha en que se completó.
+    };
+
+    try {
+        // 4. Creamos un nuevo documento en la colección 'resultados'.
+        await addDoc(collection(db, "resultados"), resultData);
+
+        // 5. Mostramos la pantalla de resultados al estudiante.
+        const resultsHTML = `
+            <div class="results-container">
+                <h2>¡Evaluación Completada!</h2>
+                <p>Este es tu resultado final para la evaluación "${currentEvaluation.title}".</p>
+                <div class="score-display">
+                    <span class="score">${score}</span>
+                    <span class="total">de ${currentEvaluation.questions.length}</span>
+                </div>
+            </div>
+        `;
+        evaluationsContainer.innerHTML = resultsHTML;
+
+    } catch (error) {
+        console.error("Error al guardar el resultado:", error);
+        alert("Ocurrió un error al guardar tu resultado. Por favor, contacta al docente.");
+    }
+};
+
+// --- LÓGICA PARA RENDERIZAR LA EVALUACIÓN ---
+const saveCurrentAnswer = () => {
+    const selectedOption = document.querySelector('input[name="question"]:checked');
+    if (selectedOption) {
+        studentAnswers[currentQuestionIndex] = selectedOption.value;
+    }
+};
+
+const displayQuestion = () => {
+    const questionData = currentEvaluation.questions[currentQuestionIndex];
+    const savedAnswer = studentAnswers[currentQuestionIndex];
+
+    const optionsHTML = Object.entries(questionData.opciones).map(([key, value]) => `
+        <label class="option">
+            <input type="radio" name="question" value="${key}" ${savedAnswer === key ? 'checked' : ''}>
+            <span><strong>${key})</strong> ${value}</span>
+        </label>
+    `).join('');
+
+    const evaluationHTML = `
+        <h2>${currentEvaluation.title}</h2>
+        <div class="question-container">
+            <p class="question-text">${currentQuestionIndex + 1}. ${questionData.pregunta}</p>
+            <form id="question-form">
+                <div class="options">${optionsHTML}</div>
+            </form>
+            <div class="nav-buttons">
+                ${currentQuestionIndex > 0 ? '<button id="prev-btn" class="cta-button secondary">Anterior</button>' : '<div></div>'}
+                ${currentQuestionIndex < currentEvaluation.questions.length - 1 ? '<button id="next-btn" class="cta-button">Siguiente</button>' : ''}
+                ${currentQuestionIndex === currentEvaluation.questions.length - 1 ? '<button id="finish-btn" class="cta-button">Finalizar Evaluación</button>' : ''}
+            </div>
+        </div>
+    `;
+    evaluationsContainer.innerHTML = evaluationHTML;
+};
+
+const startEvaluation = (roomData, roomId) => {
+    joinRoomSection.style.display = 'none';
+    if (!roomData.preguntas || roomData.preguntas.length === 0) {
+        evaluationsContainer.innerHTML = `<h2>Evaluación no disponible</h2><p>Esta sala aún no tiene preguntas. Por favor, contacta a tu docente.</p>`;
+        return;
+    }
+
+    currentEvaluation = {
+        title: roomData.titulo,
+        questions: roomData.preguntas
+    };
+    // Guardamos el ID de la sala para usarlo al final.
+    studentData.salaId = roomId;
+    studentAnswers = new Array(currentEvaluation.questions.length).fill(null);
+    currentQuestionIndex = 0;
+    displayQuestion();
+};
+
 const handleJoinRoom = async (e) => {
-    // 1. Prevenimos que el formulario recargue la página.
     e.preventDefault();
-    
-    // 2. Obtenemos el código que el usuario escribió, lo limpiamos de espacios
-    //    y lo convertimos a mayúsculas para que coincida con el formato de la BD.
     const roomCode = joinRoomForm['room-code'].value.trim().toUpperCase();
-
-    // 3. Verificamos que el código no esté vacío.
     if (!roomCode) {
         alert("Por favor, ingresa un código de sala.");
         return;
     }
 
-    // 4. Creamos una consulta a la colección 'salas'.
-    //    Usamos 'where' para filtrar los documentos y encontrar aquel
-    //    cuyo campo 'codigoAcceso' sea exactamente igual al que ingresó el usuario.
     const q = query(collection(db, "salas"), where("codigoAcceso", "==", roomCode));
-
     try {
-        // 5. Ejecutamos la consulta.
         const querySnapshot = await getDocs(q);
-
-        // 6. Analizamos el resultado.
         if (querySnapshot.empty) {
-            // Si 'empty' es true, no se encontró ningún documento. El código es incorrecto.
-            alert("Código incorrecto. No se encontró ninguna sala, por favor verifica el código.");
+            alert("Código incorrecto. No se encontró ninguna sala.");
         } else {
-            // Si no está vacío, significa que encontramos la sala.
-            // Obtenemos la información de la sala del primer (y único) documento.
             const roomDoc = querySnapshot.docs[0];
-            const roomData = roomDoc.data();
-            
-            // Mostramos el mensaje de éxito. En el futuro, esto nos llevará a la evaluación.
-            alert(`¡Te has unido a la sala "${roomData.titulo}" con éxito!`);
-            
-            // Limpiamos el formulario.
-            joinRoomForm.reset();
+            // Pasamos tanto los datos de la sala como su ID.
+            startEvaluation(roomDoc.data(), roomDoc.id);
         }
     } catch (error) {
-        // Si algo sale mal con la conexión a Firebase, mostramos un error.
         console.error("Error al buscar la sala:", error);
-        alert("Ocurrió un error al intentar unirse a la sala. Inténtalo de nuevo.");
+        alert("Ocurrió un error al intentar unirse a la sala.");
     }
 };
 
-
-// --- PASO 3: FUNCIÓN DE INICIALIZACIÓN DEL PANEL ---
-// Esta función configura los elementos básicos del panel una vez que hemos
-// verificado que el usuario es un estudiante.
+// --- FUNCIÓN DE INICIALIZACIÓN DEL PANEL ---
 const initializePanel = (userData) => {
-    // Mostramos el nombre del estudiante en el encabezado.
     userNameElement.textContent = `Bienvenido, ${userData.nombre}`;
+    // Guardamos los datos del estudiante en nuestra variable de estado.
+    studentData.uid = userData.uid;
+    studentData.nombre = userData.nombre;
 
-    // Configuramos el botón de cerrar sesión.
     logoutButton.addEventListener('click', async () => {
         try {
             await signOut(auth);
-            // Al cerrar sesión, lo redirigimos a la página de login.
             window.location.href = 'login.html';
         } catch (error) {
             console.error("Error al cerrar sesión:", error);
         }
     });
 
-    // Añadimos el 'escuchador' de eventos al formulario para que llame a
-    // nuestra función 'handleJoinRoom' cuando se envíe.
     joinRoomForm.addEventListener('submit', handleJoinRoom);
+
+    evaluationsContainer.addEventListener('click', (e) => {
+        if (e.target.id === 'next-btn') {
+            saveCurrentAnswer();
+            currentQuestionIndex++;
+            displayQuestion();
+        }
+        if (e.target.id === 'prev-btn') {
+            saveCurrentAnswer();
+            currentQuestionIndex--;
+            displayQuestion();
+        }
+        // --- ¡LÓGICA FINAL AÑADIDA! ---
+        if (e.target.id === 'finish-btn') {
+            // Llamamos a la función que se encarga de todo el proceso final.
+            handleFinishEvaluation();
+        }
+    });
 };
 
-
-// --- PASO 2: GUARDIÁN DE RUTA ---
-// Esta es la primera pieza de lógica que se ejecuta. Protege la página.
+// --- GUARDIÁN DE RUTA ---
 onAuthStateChanged(auth, async (user) => {
-    // Primero, verificamos si hay un usuario con sesión iniciada.
     if (user) {
-        // Si hay sesión, obtenemos su UID.
         const userUid = user.uid;
-        // Creamos una referencia a su documento en la colección 'users'.
         const userDocRef = doc(db, "users", userUid);
-        
         try {
-            // Intentamos obtener el documento.
             const userDocSnap = await getDoc(userDocRef);
-
-            // Verificamos si el documento realmente existe.
             if (userDocSnap.exists()) {
-                // Si existe, obtenemos sus datos.
                 const userData = userDocSnap.data();
-                
-                // ¡La comprobación clave! Verificamos que su rol sea 'estudiante'.
+                // Adjuntamos el UID a los datos del usuario.
+                userData.uid = userUid;
                 if (userData.rol === 'estudiante') {
-                    // Si es un estudiante, todo está en orden.
-                    // Llamamos a la función que inicializa el panel.
                     initializePanel(userData);
                 } else {
-                    // Si el rol no es 'estudiante' (podría ser 'docente'), le negamos el acceso.
                     alert("Acceso no autorizado. Esta página es solo para estudiantes.");
                     window.location.href = 'index.html';
                 }
             } else {
-                // Si el documento no existe por alguna razón, lo tratamos como un error
-                // y lo enviamos al login.
-                console.error("No se encontró el documento del usuario en Firestore.");
                 window.location.href = 'login.html';
             }
         } catch (error) {
-            // Si hay un error al intentar leer el documento, lo notificamos y enviamos al login.
             console.error("Error al obtener los datos del usuario:", error);
             window.location.href = 'login.html';
         }
     } else {
-        // Si 'user' es null, no hay sesión iniciada. Redirigimos directamente al login.
         window.location.href = 'login.html';
     }
 });

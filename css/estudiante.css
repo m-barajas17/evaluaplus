@@ -137,3 +137,108 @@ body {
     color: var(--color-secondary);
     border: 2px solid var(--color-secondary);
 }
+
+/* --- ESTILOS PARA LA INTERFAZ DE EVALUACIÓN --- */
+
+.question-container {
+    margin-top: 1.5rem;
+    text-align: left;
+}
+
+.question-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+}
+
+.option:hover,
+.option:has(input:checked) { /* Estilo al pasar el mouse o si está seleccionado */
+    background-color: #EEF2FF;
+    border-color: var(--color-secondary);
+}
+
+.option input[type="radio"] {
+    margin-right: 1rem;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-secondary);
+}
+
+.option span {
+    flex: 1;
+}
+
+.nav-buttons {
+    margin-top: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--color-border);
+    padding-top: 1.5rem;
+}
+
+/* Hacemos que los botones no ocupen el 100% del ancho */
+.nav-buttons .cta-button {
+    width: auto;
+    padding: 0.8rem 2rem;
+}
+
+/* --- ESTILOS PARA LA VISTA DE RESULTADOS --- */
+
+.results-container {
+    text-align: center;
+}
+
+.results-container h2 {
+    font-size: 2rem;
+    color: var(--color-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.results-container p {
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    margin-bottom: 2rem;
+}
+
+.score-display {
+    background: var(--gradient);
+    color: var(--color-surface);
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    box-shadow: 0 10px 25px rgba(55, 48, 163, 0.3);
+}
+
+.score-display .score {
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.score-display .total {
+    font-size: 1.2rem;
+    opacity: 0.8;
+}
