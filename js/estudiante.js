@@ -12,9 +12,6 @@ import {
     query,
     where,
     getDocs,
-    // --- ¡NUEVA IMPORTACIÓN! ---
-    // addDoc nos permite crear un nuevo documento en una colección.
-    // Lo usaremos para guardar el resultado de la evaluación.
     addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -23,56 +20,96 @@ const userNameElement = document.getElementById('user-name');
 const logoutButton = document.getElementById('logout-button');
 const joinRoomForm = document.getElementById('join-room-form');
 const joinRoomSection = document.getElementById('join-room-section');
-const evaluationsContainer = document.getElementById('joined-rooms-list');
+const evaluationSection = document.getElementById('evaluation-section'); // Contenedor de evaluación/resultados
+const evaluationsContainer = document.getElementById('evaluations-container'); // Div interno
+// --- ¡NUEVA REFERENCIA PARA EL HISTORIAL! ---
+const historyListContainer = document.getElementById('history-list');
+
 
 // --- GESTIÓN DEL ESTADO DE LA EVALUACIÓN Y DEL USUARIO ---
 let currentEvaluation = null;
 let currentQuestionIndex = 0;
 let studentAnswers = [];
-// Guardaremos los datos del estudiante para usarlos al final.
 let studentData = {
     uid: null,
     nombre: null,
-    salaId: null // Guardaremos el ID de la sala aquí.
+    salaId: null
+};
+
+// --- ¡NUEVA LÓGICA PARA MOSTRAR HISTORIAL! ---
+/**
+ * Consulta el historial de evaluaciones completadas por un estudiante y las muestra en la interfaz.
+ * @param {string} studentId - El UID del estudiante que ha iniciado sesión.
+ */
+const displayStudentHistory = async (studentId) => {
+    // 1. Creamos la consulta a la colección 'resultados'.
+    // Buscamos todos los documentos donde el 'estudianteId' coincida con el del usuario actual.
+    const q = query(collection(db, "resultados"), where("estudianteId", "==", studentId));
+    
+    try {
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            historyListContainer.innerHTML = '<p>Aún no has completado ninguna evaluación.</p>';
+            return;
+        }
+
+        historyListContainer.innerHTML = ''; // Limpiamos el mensaje de "cargando"
+        
+        // 2. Iteramos sobre cada resultado encontrado.
+        // Usamos un bucle for...of para poder usar 'await' dentro y esperar a que cada consulta anidada termine.
+        for (const resultDoc of querySnapshot.docs) {
+            const resultData = resultDoc.data();
+            
+            // 3. Por cada resultado, necesitamos obtener el nombre de la evaluación.
+            // Para ello, usamos el 'salaId' guardado en el resultado para buscar el documento correspondiente en la colección 'salas'.
+            const roomDocRef = doc(db, "salas", resultData.salaId);
+            const roomDocSnap = await getDoc(roomDocRef);
+
+            let roomTitle = "Evaluación eliminada"; // Texto por defecto si la sala ya no existe
+            if (roomDocSnap.exists()) {
+                roomTitle = roomDocSnap.data().titulo;
+            }
+
+            // 4. Creamos el elemento HTML para el historial y lo añadimos al contenedor.
+            const historyItem = `
+                <div class="history-item">
+                    <span class="history-item-title">${roomTitle}</span>
+                    <span class="history-item-score">${resultData.calificacion} / ${resultData.totalPreguntas}</span>
+                </div>
+            `;
+            historyListContainer.innerHTML += historyItem;
+        }
+
+    } catch (error) {
+        console.error("Error al obtener el historial:", error);
+        historyListContainer.innerHTML = '<p>Ocurrió un error al cargar tu historial.</p>';
+    }
 };
 
 
-// --- LÓGICA DE CALIFICACIÓN Y FINALIZACIÓN ---
-
-/**
- * Se ejecuta cuando el estudiante hace clic en "Finalizar Evaluación".
- * Calcula la calificación, la guarda en Firestore y muestra el resultado.
- */
+// --- LÓGICA DE CALIFICACIÓN Y FINALIZACIÓN (Sin cambios) ---
 const handleFinishEvaluation = async () => {
-    // 1. Guardamos la respuesta de la última pregunta.
     saveCurrentAnswer();
-
-    // 2. Calculamos la puntuación.
     let score = 0;
     currentEvaluation.questions.forEach((question, index) => {
-        // Comparamos la respuesta correcta de la pregunta con la guardada.
         if (question.correcta === studentAnswers[index]) {
             score++;
         }
     });
 
-    // 3. Preparamos el objeto de resultado para guardarlo.
     const resultData = {
         salaId: studentData.salaId,
         estudianteId: studentData.uid,
         nombreEstudiante: studentData.nombre,
         calificacion: score,
         totalPreguntas: currentEvaluation.questions.length,
-        // Guardamos las respuestas para futura referencia o revisión.
         respuestas: studentAnswers,
-        fecha: new Date() // Guardamos la fecha en que se completó.
+        fecha: new Date()
     };
 
     try {
-        // 4. Creamos un nuevo documento en la colección 'resultados'.
         await addDoc(collection(db, "resultados"), resultData);
-
-        // 5. Mostramos la pantalla de resultados al estudiante.
         const resultsHTML = `
             <div class="results-container">
                 <h2>¡Evaluación Completada!</h2>
@@ -81,17 +118,20 @@ const handleFinishEvaluation = async () => {
                     <span class="score">${score}</span>
                     <span class="total">de ${currentEvaluation.questions.length}</span>
                 </div>
-            </div>
-        `;
-        evaluationsContainer.innerHTML = resultsHTML;
+            </div>`;
+        evaluationSection.innerHTML = resultsHTML; // Mostramos el resultado en el contenedor principal
+        
+        // ¡ACTUALIZACIÓN IMPORTANTE!
+        // Después de finalizar, volvemos a cargar el historial para que se refleje la nueva evaluación completada.
+        await displayStudentHistory(studentData.uid);
 
     } catch (error) {
         console.error("Error al guardar el resultado:", error);
-        alert("Ocurrió un error al guardar tu resultado. Por favor, contacta al docente.");
+        alert("Ocurrió un error al guardar tu resultado.");
     }
 };
 
-// --- LÓGICA PARA RENDERIZAR LA EVALUACIÓN ---
+// --- LÓGICA PARA RENDERIZAR LA EVALUACIÓN (Sin cambios sustanciales) ---
 const saveCurrentAnswer = () => {
     const selectedOption = document.querySelector('input[name="question"]:checked');
     if (selectedOption) {
@@ -102,14 +142,12 @@ const saveCurrentAnswer = () => {
 const displayQuestion = () => {
     const questionData = currentEvaluation.questions[currentQuestionIndex];
     const savedAnswer = studentAnswers[currentQuestionIndex];
-
     const optionsHTML = Object.entries(questionData.opciones).map(([key, value]) => `
         <label class="option">
             <input type="radio" name="question" value="${key}" ${savedAnswer === key ? 'checked' : ''}>
             <span><strong>${key})</strong> ${value}</span>
         </label>
     `).join('');
-
     const evaluationHTML = `
         <h2>${currentEvaluation.title}</h2>
         <div class="question-container">
@@ -122,8 +160,7 @@ const displayQuestion = () => {
                 ${currentQuestionIndex < currentEvaluation.questions.length - 1 ? '<button id="next-btn" class="cta-button">Siguiente</button>' : ''}
                 ${currentQuestionIndex === currentEvaluation.questions.length - 1 ? '<button id="finish-btn" class="cta-button">Finalizar Evaluación</button>' : ''}
             </div>
-        </div>
-    `;
+        </div>`;
     evaluationsContainer.innerHTML = evaluationHTML;
 };
 
@@ -133,12 +170,10 @@ const startEvaluation = (roomData, roomId) => {
         evaluationsContainer.innerHTML = `<h2>Evaluación no disponible</h2><p>Esta sala aún no tiene preguntas. Por favor, contacta a tu docente.</p>`;
         return;
     }
-
     currentEvaluation = {
         title: roomData.titulo,
         questions: roomData.preguntas
     };
-    // Guardamos el ID de la sala para usarlo al final.
     studentData.salaId = roomId;
     studentAnswers = new Array(currentEvaluation.questions.length).fill(null);
     currentQuestionIndex = 0;
@@ -148,11 +183,7 @@ const startEvaluation = (roomData, roomId) => {
 const handleJoinRoom = async (e) => {
     e.preventDefault();
     const roomCode = joinRoomForm['room-code'].value.trim().toUpperCase();
-    if (!roomCode) {
-        alert("Por favor, ingresa un código de sala.");
-        return;
-    }
-
+    if (!roomCode) return;
     const q = query(collection(db, "salas"), where("codigoAcceso", "==", roomCode));
     try {
         const querySnapshot = await getDocs(q);
@@ -160,7 +191,6 @@ const handleJoinRoom = async (e) => {
             alert("Código incorrecto. No se encontró ninguna sala.");
         } else {
             const roomDoc = querySnapshot.docs[0];
-            // Pasamos tanto los datos de la sala como su ID.
             startEvaluation(roomDoc.data(), roomDoc.id);
         }
     } catch (error) {
@@ -169,10 +199,9 @@ const handleJoinRoom = async (e) => {
     }
 };
 
-// --- FUNCIÓN DE INICIALIZACIÓN DEL PANEL ---
+// --- FUNCIÓN DE INICIALIZACIÓN DEL PANEL (ACTUALIZADA) ---
 const initializePanel = (userData) => {
     userNameElement.textContent = `Bienvenido, ${userData.nombre}`;
-    // Guardamos los datos del estudiante en nuestra variable de estado.
     studentData.uid = userData.uid;
     studentData.nombre = userData.nombre;
 
@@ -187,7 +216,8 @@ const initializePanel = (userData) => {
 
     joinRoomForm.addEventListener('submit', handleJoinRoom);
 
-    evaluationsContainer.addEventListener('click', (e) => {
+    // Se cambió el contenedor del listener para evitar conflictos
+    evaluationSection.addEventListener('click', (e) => {
         if (e.target.id === 'next-btn') {
             saveCurrentAnswer();
             currentQuestionIndex++;
@@ -198,15 +228,17 @@ const initializePanel = (userData) => {
             currentQuestionIndex--;
             displayQuestion();
         }
-        // --- ¡LÓGICA FINAL AÑADIDA! ---
         if (e.target.id === 'finish-btn') {
-            // Llamamos a la función que se encarga de todo el proceso final.
             handleFinishEvaluation();
         }
     });
+    
+    // --- ¡LLAMADA A LA NUEVA FUNCIÓN! ---
+    // En cuanto el panel se inicializa, llamamos a la función para cargar el historial.
+    displayStudentHistory(userData.uid);
 };
 
-// --- GUARDIÁN DE RUTA ---
+// --- GUARDIÁN DE RUTA (Sin cambios) ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         const userUid = user.uid;
@@ -215,7 +247,6 @@ onAuthStateChanged(auth, async (user) => {
             const userDocSnap = await getDoc(userDocRef);
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data();
-                // Adjuntamos el UID a los datos del usuario.
                 userData.uid = userUid;
                 if (userData.rol === 'estudiante') {
                     initializePanel(userData);

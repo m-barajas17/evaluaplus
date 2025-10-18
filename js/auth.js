@@ -4,51 +4,41 @@
 import { auth, db } from './firebase-config.js';
 
 // Importamos las funciones específicas que necesitamos de los SDKs de Firebase
-import { 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword 
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { 
-    doc, 
-    setDoc 
+import {
+    doc,
+    setDoc,
+    // ¡NUEVA IMPORTACIÓN! Necesitamos getDoc para poder leer un documento específico.
+    getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// --- LÓGICA DE REGISTRO ---
-
-// Obtenemos la referencia al formulario de registro
+// --- LÓGICA DE REGISTRO (Sin cambios) ---
 const registerForm = document.querySelector('#register-form');
-
-// Añadimos un 'escuchador' de eventos para cuando el formulario se intente enviar
 if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
-        // Prevenimos el comportamiento por defecto del formulario (que es recargar la página)
         e.preventDefault();
-        
-        // Obtenemos los valores de los campos del formulario
         const name = registerForm['name'].value;
         const email = registerForm['email'].value;
         const password = registerForm['password'].value;
         const role = registerForm['role'].value;
 
         try {
-            // Usamos la función de Firebase para crear un nuevo usuario con email y contraseña
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // ¡Importante! Ahora guardamos la información adicional del usuario en Firestore.
-            // Creamos un nuevo documento en la colección 'users' con el ID del usuario (uid).
             await setDoc(doc(db, "users", user.uid), {
                 nombre: name,
                 email: email,
                 rol: role
             });
-            
-            // Mostramos una alerta de éxito y redirigimos al login
+
             alert('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.');
             window.location.href = 'login.html';
 
         } catch (error) {
-            // Si ocurre un error, lo mostramos en la consola y en una alerta
             console.error("Error al registrar el usuario:", error);
             alert(`Ocurrió un error: ${error.message}`);
         }
@@ -56,31 +46,49 @@ if (registerForm) {
 }
 
 
-// --- LÓGICA DE INICIO DE SESIÓN ---
-
-// Obtenemos la referencia al formulario de login
+// --- LÓGICA DE INICIO DE SESIÓN (¡ACTUALIZADA!) ---
 const loginForm = document.querySelector('#login-form');
-
-// Añadimos el 'escuchador' para el evento de envío
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-
-        // Obtenemos los valores de email y contraseña
         const email = loginForm['email'].value;
         const password = loginForm['password'].value;
 
         try {
-            // Usamos la función de Firebase para iniciar sesión
+            // 1. Autenticamos al usuario como siempre.
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            
-            // Si el inicio de sesión es exitoso, mostramos un mensaje y redirigimos a la página principal
-            alert(`¡Bienvenido de vuelta!`);
-            // Eventualmente, esto redirigirá a un panel de control (dashboard.html)
-            window.location.href = 'index.html'; 
+            const user = userCredential.user;
+
+            // 2. ¡NUEVO! Antes de redirigir, consultamos su rol en Firestore.
+            // Creamos una referencia directa al documento del usuario usando su UID.
+            const userDocRef = doc(db, "users", user.uid);
+            // Obtenemos los datos del documento.
+            const userDocSnap = await getDoc(userDocRef);
+
+            // 3. Verificamos si el documento existe y tiene datos.
+            if (userDocSnap.exists()) {
+                const userData = userDocSnap.data();
+                const userRole = userData.rol; // Obtenemos el campo 'rol'
+
+                // 4. Redirigimos basándonos en el rol.
+                if (userRole === 'docente') {
+                    alert('¡Bienvenido, Docente!');
+                    window.location.href = 'docente.html';
+                } else if (userRole === 'estudiante') {
+                    alert('¡Bienvenido, Estudiante!');
+                    window.location.href = 'estudiante.html';
+                } else {
+                    // Caso de seguridad por si un usuario no tiene rol asignado.
+                    alert('No se pudo determinar tu rol. Redirigiendo a la página principal.');
+                    window.location.href = 'index.html';
+                }
+            } else {
+                // Caso de seguridad por si el usuario está autenticado pero no tiene registro en Firestore.
+                alert('No se encontraron datos adicionales del usuario.');
+                window.location.href = 'index.html';
+            }
 
         } catch (error) {
-            // Manejo de errores (ej. contraseña incorrecta, usuario no encontrado)
             console.error("Error al iniciar sesión:", error);
             alert(`Error al iniciar sesión: ${error.message}`);
         }
