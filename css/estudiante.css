@@ -96,7 +96,7 @@ body {
     margin-bottom: 0.5rem;
 }
 
-.input-group input {
+#join-room-form input {
     width: 100%;
     padding: 0.75rem 1rem;
     border-radius: 8px;
@@ -476,4 +476,18 @@ body {
     background-color: #FEE2E2; /* Rojo pálido */
     color: #991B1B; /* Rojo oscuro */
     border-color: #FECACA;
+}
+/* (Al final de css/estudiante.css) */
+.student-short-answer {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 2px solid var(--color-border);
+    font-size: 1rem;
+    font-family: var(--font-family);
+}
+
+.student-short-answer:focus {
+    outline: none;
+    border-color: var(--color-secondary);
 }

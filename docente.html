@@ -129,6 +129,7 @@
                     <select id="question-type" name="question-type">
                         <option value="multipleChoice">Opción Múltiple (A, B, C, D)</option>
                         <option value="trueFalse">Verdadero o Falso</option>
+                        <option value="shortAnswer">Respuesta Corta (Texto Exacto)</option>
                     </select>
                 </div>
 
@@ -166,7 +167,15 @@
                     </div>
                 </div>
 
-                <div class="input-group">
+                <div id="options-short-answer" style="display: none;">
+                    <div class="input-group">
+                        <label for="correct-answer-sa">Respuesta Correcta (Exacta)</label>
+                        <input type="text" id="correct-answer-sa" placeholder="El estudiante debe escribir esto exactamente..." >
+                        <small>La calificación es sensible a mayúsculas, minúsculas y espacios.</small>
+                    </div>
+                </div>
+
+                <div class="input-group" id="correct-answer-radios">
                     <label>Respuesta Correcta</label>
                     <div id="correct-answer-mc" class="correct-answer-selector">
                         <label><input type="radio" name="correct-answer" value="A" checked> A</label>

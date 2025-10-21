@@ -101,8 +101,7 @@ const showReview = async (resultId) => {
         const roomData = roomDocSnap.data();
         reviewModalTitle.textContent = `Revisión de "${roomData.titulo}"`;
 
-        // 3. Construir el HTML de la revisión.
-        // (Lógica de construcción de HTML sin cambios)
+// 3. Construir el HTML de la revisión.
         let reviewHTML = '';
         const studentResponses = resultData.respuestas; // Array con las respuestas del estudiante
         const questions = roomData.preguntas; // Array con las preguntas originales
@@ -112,17 +111,35 @@ const showReview = async (resultId) => {
             const correctAnswer = question.correcta;
             const isCorrect = studentAnswer === correctAnswer;
 
-            // Construir las opciones, aplicando clases CSS dinámicamente
-            const optionsHTML = Object.entries(question.opciones).map(([key, value]) => {
-                let optionClass = 'review-option';
-                if (key === studentAnswer) {
-                    optionClass += ' student-answer';
-                }
-                if (key === correctAnswer) {
-                    optionClass += ' correct-answer';
-                }
-                return `<div class="${optionClass}"><strong>${key})</strong> ${value}</div>`;
-            }).join('');
+            // --- INICIA EL NUEVO BLOQUE LÓGICO ---
+            const questionType = question.tipo || 'multipleChoice';
+            let optionsHTML = '';
+
+            if (questionType === 'multipleChoice' || questionType === 'trueFalse') {
+                optionsHTML = Object.entries(question.opciones).map(([key, value]) => {
+                    let optionClass = 'review-option';
+                    if (key === studentAnswer) {
+                        optionClass += ' student-answer'; // La que marcó el estudiante
+                    }
+                    if (key === correctAnswer) {
+                        optionClass += ' correct-answer'; // La que era correcta
+                    }
+                    return `<div class="${optionClass}"><strong>${key})</strong> ${value}</div>`;
+                }).join('');
+            } else if (questionType === 'shortAnswer') {
+                const isCorrect = studentAnswer === correctAnswer;
+                const answerClass = isCorrect ? 'correct-answer' : 'student-answer';
+
+                optionsHTML = `
+                    <div class="review-option ${answerClass}">
+                        <strong>Tu Respuesta:</strong> ${studentAnswer || "(Sin respuesta)"}
+                    </div>
+                    <div class="review-option correct-answer">
+                        <strong>Respuesta Correcta:</strong> ${correctAnswer}
+                    </div>
+                `;
+            }
+            // --- TERMINA EL NUEVO BLOQUE LÓGICO -
             
             // Determinar qué feedback mostrar
             const feedbackText = isCorrect ? question.feedbackCorrecto : question.feedbackIncorrecto;
@@ -321,8 +338,12 @@ function startTimer(endTime) {
 // (Toda esta sección no tiene cambios, ya que no contenía alerts ni cargas)
 const saveCurrentAnswer = () => {
     const selectedOption = document.querySelector('input[name="question"]:checked');
+    const shortAnswerInput = document.getElementById('short-answer-input');
+
     if (selectedOption) {
         studentAnswers[currentQuestionIndex] = selectedOption.value;
+    } else if (shortAnswerInput) {
+        studentAnswers[currentQuestionIndex] = shortAnswerInput.value.trim();
     }
 };
 
@@ -344,14 +365,24 @@ const displayQuestion = () => {
                 <span><strong>${key})</strong> ${value}</span>
             </label>
         `).join('');
-    } else if (questionType === 'trueFalse') {
-        // Genera HTML solo para Verdadero (A) y Falso (B)
+
+        } else if (questionType === 'trueFalse') {
+        // (lógica existente sin cambios)
         optionsHTML = Object.entries(questionData.opciones).map(([key, value]) => `
             <label class="option">
                 <input type="radio" name="question" value="${key}" ${savedAnswer === key ? 'checked' : ''}>
                 <span><strong>${key})</strong> ${value}</span>
             </label>
         `).join('');
+
+    // --- AÑADE ESTE BLOQUE ---
+    } else if (questionType === 'shortAnswer') {
+        optionsHTML = `
+            <div class="input-group">
+                <label for="short-answer-input">Escribe tu respuesta:</label>
+                <input type="text" id="short-answer-input" class="student-short-answer" value="${savedAnswer || ''}" placeholder="Respuesta...">
+            </div>
+        `;
     }
 
     const evaluationHTML = `

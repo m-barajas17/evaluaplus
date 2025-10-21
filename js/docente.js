@@ -52,6 +52,9 @@ const modalTitle = document.getElementById('modal-title');
 const saveQuestionBtn = document.getElementById('save-question-btn');
 const cancelQuestionBtn = document.getElementById('cancel-question-btn');
 const saveToBankCheckbox = document.getElementById('save-to-bank');
+const optionsShortAnswer = document.getElementById('options-short-answer');
+const inputCorrectAnswerSA = document.getElementById('correct-answer-sa');
+const correctAnswerRadios = document.getElementById('correct-answer-radios');
 
 // =============================================
 // ¡NUEVO! (Fase 17) Referencias para Tipos de Pregunta
@@ -117,40 +120,49 @@ const generateAccessCode = () => {
  * Muestra/oculta y habilita/deshabilita los campos del modal según el tipo de pregunta.
  * @param {string} type - 'multipleChoice' o 'trueFalse'
  */
+// (Reemplaza la función completa, aprox. línea 120)
+
 const setQuestionModalUI = (type) => {
+    // Ocultar y deshabilitar todo primero
+    optionsMultipleChoice.style.display = 'none';
+    correctAnswerMC.style.display = 'none';
+    optionsTrueFalse.style.display = 'none';
+    correctAnswerTF.style.display = 'none';
+    optionsShortAnswer.style.display = 'none';
+    correctAnswerRadios.style.display = 'none'; // Oculta el contenedor de radios
+
+    addQuestionForm.querySelector('#option-a').disabled = true;
+    addQuestionForm.querySelector('#option-b').disabled = true;
+    addQuestionForm.querySelector('#option-c').disabled = true;
+    addQuestionForm.querySelector('#option-d').disabled = true;
+    document.querySelectorAll('input[name="correct-answer"]').forEach(radio => radio.disabled = true);
+    document.querySelectorAll('input[name="correct-answer-tf"]').forEach(radio => radio.disabled = true);
+    inputCorrectAnswerSA.disabled = true;
+
     if (type === 'multipleChoice') {
         optionsMultipleChoice.style.display = 'block';
+        correctAnswerRadios.style.display = 'block';
         correctAnswerMC.style.display = 'flex';
-        optionsTrueFalse.style.display = 'none';
-        correctAnswerTF.style.display = 'none';
 
-        // Habilitar campos de MC (¡IMPORTANTE!)
         addQuestionForm.querySelector('#option-a').disabled = false;
         addQuestionForm.querySelector('#option-b').disabled = false;
         addQuestionForm.querySelector('#option-c').disabled = false;
         addQuestionForm.querySelector('#option-d').disabled = false;
         document.querySelectorAll('input[name="correct-answer"]').forEach(radio => radio.disabled = false);
 
-        // Deshabilitar campos de V/F (¡IMPORTANTE!)
-        document.querySelectorAll('input[name="correct-answer-tf"]').forEach(radio => radio.disabled = true);
     } else if (type === 'trueFalse') {
-        optionsMultipleChoice.style.display = 'none';
-        correctAnswerMC.style.display = 'none';
         optionsTrueFalse.style.display = 'block';
+        correctAnswerRadios.style.display = 'block';
         correctAnswerTF.style.display = 'flex';
 
-        // Deshabilitar campos de MC (¡IMPORTANTE!)
-        addQuestionForm.querySelector('#option-a').disabled = true;
-        addQuestionForm.querySelector('#option-b').disabled = true;
-        addQuestionForm.querySelector('#option-c').disabled = true;
-        addQuestionForm.querySelector('#option-d').disabled = true;
-        document.querySelectorAll('input[name="correct-answer"]').forEach(radio => radio.disabled = true);
-
-        // Habilitar campos de V/F (¡IMPORTANTE!)
         document.querySelectorAll('input[name="correct-answer-tf"]').forEach(radio => radio.disabled = false);
+
+    } else if (type === 'shortAnswer') {
+        optionsShortAnswer.style.display = 'block';
+        inputCorrectAnswerSA.disabled = false;
+        // No se muestra el correctAnswerRadios
     }
 };
-
 // --- ADD/EDIT QUESTION MODAL MANAGEMENT ---
 const openAddQuestionModal = () => {
     // =============================================
@@ -200,10 +212,16 @@ const openEditQuestionModal = (question, index) => {
         addQuestionForm.querySelector('#option-d').value = question.opciones.D;
         addQuestionForm.querySelector(`input[name="correct-answer"][value="${question.correcta}"]`).checked = true;
 
-    } else if (questionType === 'trueFalse') {
+        } else if (questionType === 'trueFalse') {
         // Solo necesitamos marcar la respuesta correcta
         addQuestionForm.querySelector(`input[name="correct-answer-tf"][value="${question.correcta}"]`).checked = true;
+    
+    // --- AÑADE ESTE BLOQUE ---
+        } else if (questionType === 'shortAnswer') {
+        // Solo necesitamos poblar la respuesta correcta
+        inputCorrectAnswerSA.value = question.correcta;
     }
+    // -------------------------
 
     addQuestionModal.style.display = 'flex';
 };
@@ -301,6 +319,11 @@ const handleQuestionSubmit = async (e) => {
             B: "Falso"
         };
         newQuestionData.correcta = addQuestionForm.querySelector('input[name="correct-answer-tf"]:checked').value;
+    
+    // --- AÑADE ESTE BLOQUE ---
+    } else if (questionType === 'shortAnswer') {
+        newQuestionData.opciones = null; // No hay opciones
+        newQuestionData.correcta = inputCorrectAnswerSA.value.trim(); // Guarda el texto exacto
     }
 
     try {
