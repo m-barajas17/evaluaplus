@@ -709,3 +709,21 @@ body {
         gap: 1.5rem;
     }
 }
+
+/* (Al final de css/docente.css) */
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr; /* Apilado en móvil por defecto */
+    gap: 1.25rem;
+}
+@media (min-width: 768px) {
+    .form-grid-2 {
+        grid-template-columns: 1fr 1fr; /* Lado a lado en escritorio */
+    }
+}
+.input-group small {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}

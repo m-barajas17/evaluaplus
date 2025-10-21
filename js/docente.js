@@ -779,6 +779,11 @@ const handleCreateRoom = async (e, userId) => {
     e.preventDefault();
     const title = createRoomForm['title'].value;
     const subject = createRoomForm['subject'].value;
+    
+    // ¡NUEVO! Capturamos el límite de tiempo
+    const timeLimitInput = createRoomForm['time-limit'].value;
+    const timeLimit = parseInt(timeLimitInput) > 0 ? parseInt(timeLimitInput) : null;
+    
     const accessCode = generateAccessCode();
 
     try {
@@ -787,7 +792,8 @@ const handleCreateRoom = async (e, userId) => {
             materia: subject,
             docenteId: userId,
             codigoAcceso: accessCode,
-            preguntas: []
+            preguntas: [],
+            limiteTiempo: timeLimit // <-- ¡LÍNEA AÑADIDA!
         });
         
         // =============================================

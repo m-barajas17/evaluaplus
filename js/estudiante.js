@@ -30,6 +30,10 @@ const evaluationSection = document.getElementById('evaluation-section');
 const evaluationsContainer = document.getElementById('evaluations-container');
 const historyListContainer = document.getElementById('history-list');
 
+// ¡NUEVO! REFERENCIAS PARA EL TEMPORIZADOR
+const timerDisplay = document.getElementById('timer-display');
+const timerCountdown = document.getElementById('timer-countdown');
+
 // --- ¡NUEVO! REFERENCIAS PARA EL MODAL DE REVISIÓN ---
 const reviewModal = document.getElementById('review-modal');
 const reviewModalTitle = document.getElementById('review-modal-title');
@@ -47,6 +51,8 @@ let studentData = {
     salaId: null
 };
 
+// ¡NUEVO! VARIABLE DE ESTADO DEL TEMPORIZADOR
+let timerInterval = null; // Para guardar el ID del setInterval
 
 // --- ¡NUEVO! LÓGICA DEL MODAL DE REVISIÓN ---
 
@@ -199,9 +205,14 @@ const displayStudentHistory = async (studentId) => {
     }
 };
 
-
-// --- LÓGICA DE CALIFICACIÓN Y FINALIZACIÓN ---
 const handleFinishEvaluation = async () => {
+    // ¡NUEVO! Detener el temporizador si existe
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timerDisplay.style.display = 'none'; // Ocultarlo
+    }
+
     // (Lógica de calificación sin cambios)
     saveCurrentAnswer();
     let score = 0;
@@ -260,6 +271,52 @@ const handleFinishEvaluation = async () => {
     }
 };
 
+/**
+ * Inicia el temporizador de cuenta regresiva.
+ * @param {number} endTime - El timestamp de finalización.
+ */
+function startTimer(endTime) {
+    timerDisplay.style.display = 'flex'; // Muestra el temporizador
+
+    // Limpia cualquier temporizador anterior
+    if (timerInterval) {
+        clearInterval(timerInterval);
+    }
+
+    timerInterval = setInterval(() => {
+        const now = Date.now();
+        const remaining = endTime - now;
+
+        if (remaining <= 0) {
+            // ¡Tiempo agotado!
+            clearInterval(timerInterval);
+            timerCountdown.textContent = "00:00";
+            timerDisplay.classList.add('danger');
+
+            Toastify({
+                text: "¡El tiempo se ha agotado! Tu evaluación se enviará automáticamente.",
+                duration: 5000,
+                style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" } // Rojo
+            }).showToast();
+
+            handleFinishEvaluation(); // Envío automático
+            return;
+        }
+
+        // Actualiza la UI del temporizador
+        const minutes = Math.floor((remaining / 1000 / 60) % 60);
+        const seconds = Math.floor((remaining / 1000) % 60);
+
+        timerCountdown.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        // Añade clase de peligro si quedan menos de 5 minutos
+        if (remaining < 300000) { // 5 minutos en milisegundos
+            timerDisplay.classList.add('danger');
+        }
+
+    }, 1000);
+}
+
 // --- LÓGICA PARA RENDERIZAR LA EVALUACIÓN ---
 // (Toda esta sección no tiene cambios, ya que no contenía alerts ni cargas)
 const saveCurrentAnswer = () => {
@@ -296,6 +353,15 @@ const displayQuestion = () => {
 
 const startEvaluation = (roomData, roomId) => {
     joinRoomSection.style.display = 'none';
+
+    // ¡NUEVO! Iniciar el temporizador si existe
+    if (roomData.limiteTiempo && roomData.limiteTiempo > 0) {
+        const tiempoEnMilisegundos = roomData.limiteTiempo * 60 * 1000;
+        const endTime = Date.now() + tiempoEnMilisegundos;
+    
+        startTimer(endTime); // Llamamos a la nueva función auxiliar
+    }
+    
     if (!roomData.preguntas || roomData.preguntas.length === 0) {
         evaluationsContainer.innerHTML = `<h2>Evaluación no disponible</h2><p>Esta sala aún no tiene preguntas. Por favor, contacta a tu docente.</p>`;
         return;

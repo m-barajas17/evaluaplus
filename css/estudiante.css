@@ -459,3 +459,21 @@ body {
     width: 100%;
     padding: 2rem 0;
 }
+/* (Al final de css/estudiante.css) */
+.timer-container {
+    background-color: #FFFBEB; /* Amarillo pálido */
+    color: #B45309; /* Naranja oscuro */
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    border: 1px solid #FDE68A;
+}
+.timer-container.danger { /* Clase para cuando quede poco tiempo */
+    background-color: #FEE2E2; /* Rojo pálido */
+    color: #991B1B; /* Rojo oscuro */
+    border-color: #FECACA;
+}

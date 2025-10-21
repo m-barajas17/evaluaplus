@@ -29,13 +29,20 @@
             <section class="card">
                 <h2>Crear Nueva Sala de Evaluación</h2>
                 <form id="create-room-form">
-                    <div class="input-group">
-                        <label for="title">Título de la Evaluación</label>
-                        <input type="text" id="title" name="title" placeholder="Ej: Examen Parcial de Álgebra" required>
+                    <div class="form-grid-2">
+                        <div class="input-group">
+                            <label for="title">Título de la Evaluación</label>
+                            <input type="text" id="title" name="title" placeholder="Ej: Examen Parcial de Álgebra" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="subject">Materia</label>
+                            <input type="text" id="subject" name="subject" placeholder="Ej: Matemáticas" required>
+                        </div>
                     </div>
                     <div class="input-group">
-                        <label for="subject">Materia</label>
-                        <input type="text" id="subject" name="subject" placeholder="Ej: Matemáticas" required>
+                        <label for="time-limit">Límite de Tiempo (en minutos)</label>
+                        <input type="number" id="time-limit" name="time-limit" placeholder="Opcional: Ej: 45">
+                        <small>Deja en blanco o en 0 para no establecer un límite de tiempo.</small>
                     </div>
                     <button type="submit" class="cta-button">Crear Sala</button>
                 </form>
