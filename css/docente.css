@@ -525,3 +525,139 @@ body {
     background-color: var(--color-danger-bg);
     box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
 }
+
+/* ============================================= */
+/* ¡NUEVO! (Fase 14) Estilos para Vista de Analíticas */
+/* ============================================= */
+
+/* Reutilizamos el estilo del header de resultados */
+.analytics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.analytics-header h2 {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+/* Grid para las tarjetas de resumen (Promedio, Tasa de Aprobación, etc.) */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.analytics-summary-item {
+    background-color: #f9fafb;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.analytics-summary-item h4 {
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.analytics-summary-item p {
+    color: var(--color-secondary);
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+/* Contenedor para las dos listas (difíciles y fáciles) */
+.analytics-lists {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.analytics-lists .card {
+    /* Reseteamos el padding/shadow para las tarjetas anidadas */
+    padding: 0;
+    box-shadow: none;
+}
+
+.analytics-lists h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+/* Estilo para cada pregunta en las listas */
+.analytics-question-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.analytics-question-item p {
+    font-weight: 500;
+    flex: 1;
+    margin: 0;
+    padding-right: 1rem;
+}
+
+.analytics-question-item span {
+    font-weight: 700;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+/* Estilos de color para las estadísticas */
+#difficult-questions-list .analytics-question-item span {
+    color: var(--color-danger);
+}
+
+#easy-questions-list .analytics-question-item span {
+    color: #065F46; /* Un verde oscuro */
+}
+.view-analytics-button {
+    width: 100%;
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all var(--transition-speed) ease;
+    background-color: transparent;
+    color: var(--color-secondary);
+    border: 2px solid var(--color-secondary);
+}
+
+.view-analytics-button:hover {
+    background-color: #EEF2FF;
+    color: var(--color-secondary);
+}
+
+.analytics-summary-item span {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.analytics-question-item p {
+    /* Truncar texto de pregunta largo */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.analytics-question-item span small {
+    font-weight: 400;
+    color: var(--color-text-muted);
+}

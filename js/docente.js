@@ -18,8 +18,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // =============================================
-// ¡NUEVO! (Paso 3.C) Constante para el Spinner
-// Reemplazará todos los "<p>Cargando...</p>"
+// Constante para el Spinner (Fase 13)
 // =============================================
 const loadingSpinner = '<div class="loader-container"><div class="loader"></div></div>';
 
@@ -40,6 +39,16 @@ const questionsListContainer = document.getElementById('questions-list-container
 const addNewQuestionBtn = document.getElementById('add-new-question-btn');
 const addFromBankBtn = document.getElementById('add-from-bank-btn');
 
+// =============================================
+// ¡NUEVO! (Fase 14) Referencias a la Vista de Analíticas
+// =============================================
+const analyticsView = document.getElementById('analytics-view');
+const analyticsTitle = document.getElementById('analytics-title');
+const analyticsSummaryGrid = document.getElementById('analytics-summary-grid');
+const difficultQuestionsList = document.getElementById('difficult-questions-list');
+const easyQuestionsList = document.getElementById('easy-questions-list');
+
+
 // --- QUESTION MODAL REFERENCES ---
 const addQuestionModal = document.getElementById('add-question-modal');
 const addQuestionForm = document.getElementById('add-question-form');
@@ -56,7 +65,7 @@ const cancelBankBtn = document.getElementById('cancel-bank-btn');
 const addSelectedQuestionsBtn = document.getElementById('add-selected-questions-btn');
 
 // =============================================
-// ¡NUEVO! (Paso 3.C) Referencias al Modal de Confirmación de Borrado
+// ¡NUEVO! (Fase 13) Referencias al Modal de Confirmación de Borrado
 // =============================================
 const confirmDeleteModal = document.getElementById('confirm-delete-modal');
 const confirmModalTitle = document.getElementById('confirm-modal-title');
@@ -72,8 +81,7 @@ let editingQuestionIndex = null;
 let bankQuestionsCache = []; 
 
 // =============================================
-// ¡NUEVO! (Paso 3.C) Variable de estado para el borrado
-// Guardará el 'index' de la pregunta a eliminar.
+// ¡NUEVO! (Fase 13) Variable de estado para el borrado
 // =============================================
 let deleteContext = {
     index: null,
@@ -131,7 +139,7 @@ const closeAddQuestionModal = () => {
 // --- QUESTION BANK MODAL MANAGEMENT ---
 const openBankModal = async () => {
     // =============================================
-    // ¡MODIFICADO! (Paso 3.C) Se reemplaza texto de carga por spinner.
+    // ¡MODIFICADO! (Fase 13) Se reemplaza texto de carga por spinner.
     // =============================================
     bankQuestionsList.innerHTML = loadingSpinner;
     bankModal.style.display = 'flex';
@@ -153,7 +161,7 @@ const openBankModal = async () => {
         console.error("Error loading bank questions:", error);
         bankQuestionsList.innerHTML = '<p>Error al cargar el banco de preguntas.</p>';
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de error
+        // ¡MODIFICADO! (Fase 13) Toast de error
         // =============================================
         Toastify({
             text: "Error al cargar tu banco de preguntas.",
@@ -218,7 +226,7 @@ const handleQuestionSubmit = async (e) => {
                 materia: roomData.materia 
             });
             // =============================================
-            // ¡MODIFICADO! (Paso 3.C) Toast de éxito (guardado en banco)
+            // ¡MODIFICADO! (Fase 13) Toast de éxito (guardado en banco)
             // =============================================
              Toastify({
                 text: "Pregunta guardada en tu banco.",
@@ -237,7 +245,7 @@ const handleQuestionSubmit = async (e) => {
         await updateDoc(roomDocRef, { preguntas: updatedQuestions });
         
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de éxito (pregunta añadida/actualizada)
+        // ¡MODIFICADO! (Fase 13) Toast de éxito (pregunta añadida/actualizada)
         // =============================================
         Toastify({
             text: editingQuestionIndex !== null ? "¡Pregunta actualizada!" : "¡Pregunta añadida!",
@@ -250,7 +258,7 @@ const handleQuestionSubmit = async (e) => {
     } catch (error) {
         console.error("Error saving question:", error);
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de error
+        // ¡MODIFICADO! (Fase 13) Toast de error
         // =============================================
         Toastify({
             text: "Ocurrió un error al guardar la pregunta.",
@@ -261,13 +269,11 @@ const handleQuestionSubmit = async (e) => {
 };
 
 // =============================================
-// ¡MODIFICADO! (Paso 3.C) Lógica de borrado refactorizada
+// ¡MODIFICADO! (Fase 13) Lógica de borrado refactorizada
 // =============================================
 
 /**
  * Paso 1: Abrir el modal de confirmación.
- * Esta función *reemplaza* a la antigua handleDeleteQuestion.
- * Ya no borra, solo guarda el contexto y abre el modal.
  */
 const openDeleteConfirmModal = (index, roomId) => {
     deleteContext.index = index;
@@ -292,7 +298,6 @@ const closeDeleteConfirmModal = () => {
 
 /**
  * Paso 3: Ejecutar la eliminación.
- * Esta función contiene la lógica de borrado que *antes* estaba en handleDeleteQuestion.
  */
 const handleExecuteDelete = async () => {
     const { index, roomId } = deleteContext;
@@ -318,7 +323,7 @@ const handleExecuteDelete = async () => {
         await updateDoc(roomDocRef, { preguntas: updatedQuestions });
         
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de éxito
+        // ¡MODIFICADO! (Fase 13) Toast de éxito
         // =============================================
         Toastify({
             text: "¡Pregunta eliminada con éxito!",
@@ -332,7 +337,7 @@ const handleExecuteDelete = async () => {
     } catch (error) {
         console.error("Error deleting question:", error);
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de error
+        // ¡MODIFICADO! (Fase 13) Toast de error
         // =============================================
         Toastify({
             text: "Ocurrió un error al eliminar la pregunta.",
@@ -347,7 +352,7 @@ const handleAddFromBank = async () => {
     const selectedCheckboxes = bankQuestionsList.querySelectorAll('input[type="checkbox"]:checked');
     if (selectedCheckboxes.length === 0) {
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de aviso (warning)
+        // ¡MODIFICADO! (Fase 13) Toast de aviso (warning)
         // =============================================
         Toastify({
             text: "Por favor, selecciona al menos una pregunta.",
@@ -370,7 +375,7 @@ const handleAddFromBank = async () => {
         });
 
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de éxito
+        // ¡MODIFICADO! (Fase 13) Toast de éxito
         // =============================================
         Toastify({
             text: `¡${questionsToAdd.length} pregunta(s) añadida(s) con éxito!`,
@@ -383,7 +388,7 @@ const handleAddFromBank = async () => {
     } catch (error) {
         console.error("Error adding questions from bank:", error);
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de error
+        // ¡MODIFICADO! (Fase 13) Toast de error
         // =============================================
          Toastify({
             text: "Ocurrió un error al añadir las preguntas.",
@@ -395,15 +400,17 @@ const handleAddFromBank = async () => {
 
 // --- VIEW MANAGEMENT & RENDERING ---
 const switchToView = (viewToShow) => {
-    // (Lógica sin cambios)
-    [mainView, resultsView, manageQuestionsView].forEach(view => view.style.display = 'none');
+    // =============================================
+    // ¡MODIFICADO! (Fase 14) Añadir analyticsView a la lista
+    // =============================================
+    [mainView, resultsView, manageQuestionsView, analyticsView].forEach(view => view.style.display = 'none');
     viewToShow.style.display = 'block';
 };
 
 const displayQuestionsForRoom = async (roomId) => {
     currentRoomId = roomId; // Asegura que el ID de la sala esté seteado
     // =============================================
-    // ¡MODIFICADO! (Paso 3.C) Se reemplaza texto de carga por spinner.
+    // ¡MODIFICADO! (Fase 13) Se reemplaza texto de carga por spinner.
     // =============================================
     questionsListContainer.innerHTML = loadingSpinner;
     
@@ -435,7 +442,7 @@ const displayQuestionsForRoom = async (roomId) => {
                     </div>
                 `;
                 // =============================================
-                // ¡MODIFICADO! (Paso 3.C) El botón de borrado ahora abre el modal
+                // ¡MODIFICADO! (Fase 13) El botón de borrado ahora abre el modal
                 // =============================================
                 questionItem.querySelector('.edit-btn').addEventListener('click', () => openEditQuestionModal(question, index));
                 questionItem.querySelector('.delete-btn').addEventListener('click', () => openDeleteConfirmModal(index, roomId)); // Pasa el índice Y el roomId
@@ -460,7 +467,7 @@ const displayQuestionsForRoom = async (roomId) => {
 const handleShowResults = async (roomId, roomTitle) => {
     resultsTitle.textContent = `Resultados de "${roomTitle}"`;
     // =============================================
-    // ¡MODIFICADO! (Paso 3.C) Se reemplaza texto de carga por spinner.
+    // ¡MODIFICADO! (Fase 13) Se reemplaza texto de carga por spinner.
     // =============================================
     resultsList.innerHTML = loadingSpinner;
     const q = query(collection(db, "resultados"), where("salaId", "==", roomId));
@@ -477,7 +484,7 @@ const handleShowResults = async (roomId, roomTitle) => {
         console.error("Error fetching results:", error);
         resultsList.innerHTML = '<p>Ocurrió un error al cargar los resultados.</p>';
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de error
+        // ¡MODIFICADO! (Fase 13) Toast de error
         // =============================================
          Toastify({
             text: "Error al cargar los resultados.",
@@ -488,9 +495,147 @@ const handleShowResults = async (roomId, roomTitle) => {
     switchToView(resultsView);
 };
 
+
+// =============================================
+// ¡NUEVO! (Fase 14) Función de Cálculo de Analíticas
+// =============================================
+const handleShowAnalytics = async (roomId, roomTitle) => {
+    analyticsTitle.textContent = `Analíticas de "${roomTitle}"`;
+    switchToView(analyticsView);
+
+    // 1. Mostrar estado de carga
+    analyticsSummaryGrid.innerHTML = loadingSpinner;
+    difficultQuestionsList.innerHTML = loadingSpinner;
+    easyQuestionsList.innerHTML = loadingSpinner;
+
+    try {
+        // 2. Obtener los datos necesarios en paralelo
+        const [roomDocSnap, resultsQuerySnap] = await Promise.all([
+            getDoc(doc(db, "salas", roomId)),
+            getDocs(query(collection(db, "resultados"), where("salaId", "==", roomId)))
+        ]);
+
+        if (!roomDocSnap.exists()) {
+            throw new Error("No se encontró la sala.");
+        }
+
+        const roomData = roomDocSnap.data();
+        const originalQuestions = roomData.preguntas;
+        const numQuestions = originalQuestions.length;
+
+        if (resultsQuerySnap.empty) {
+            analyticsSummaryGrid.innerHTML = '<p>Aún no hay resultados para esta evaluación.</p>';
+            difficultQuestionsList.innerHTML = '<p>N/A</p>';
+            easyQuestionsList.innerHTML = '<p>N/A</p>';
+            return;
+        }
+
+        // 3. Inicializar acumuladores
+        let totalScoreSum = 0;
+        let approvedCount = 0;
+        const approvalThreshold = 0.6; // 60% para aprobar
+        const numSubmissions = resultsQuerySnap.size;
+
+        // Estructura para rastrear cada pregunta: { pregunta, correct, incorrect }
+        let questionStats = originalQuestions.map(q => ({
+            pregunta: q.pregunta,
+            correct: 0,
+            incorrect: 0
+        }));
+
+        // 4. Procesar cada resultado
+        resultsQuerySnap.forEach(resultDoc => {
+            const resultData = resultDoc.data();
+
+            // Sumar para el promedio
+            totalScoreSum += resultData.calificacion;
+
+            // Contar aprobados
+            if ((resultData.calificacion / numQuestions) >= approvalThreshold) {
+                approvedCount++;
+            }
+
+            // Analizar respuesta por respuesta
+            resultData.respuestas.forEach((studentAnswer, index) => {
+                if (index < numQuestions) { // Asegurarnos de que el índice es válido
+                    if (studentAnswer === originalQuestions[index].correcta) {
+                        questionStats[index].correct++;
+                    } else {
+                        questionStats[index].incorrect++;
+                    }
+                }
+            });
+        });
+
+        // 5. Calcular métricas finales
+        const averageScore = totalScoreSum / numSubmissions;
+        const averagePercentage = (averageScore / numQuestions) * 100;
+        const approvalRate = (approvedCount / numSubmissions) * 100;
+
+        // 6. Ordenar preguntas
+        const difficultQuestions = [...questionStats].sort((a, b) => b.incorrect - a.incorrect).slice(0, 3);
+        const easyQuestions = [...questionStats].sort((a, b) => b.correct - a.correct).slice(0, 3);
+
+        // 7. Renderizar HTML
+
+        // Renderizar resumen
+        analyticsSummaryGrid.innerHTML = `
+            <div class="analytics-summary-item">
+                <h4>Calificación Promedio</h4>
+                <p>${averageScore.toFixed(1)} / ${numQuestions}</p>
+                <span>(${averagePercentage.toFixed(0)}%)</span>
+            </div>
+            <div class="analytics-summary-item">
+                <h4>Tasa de Aprobación</h4>
+                <p>${approvalRate.toFixed(0)}%</p>
+                <span>(${approvedCount} de ${numSubmissions} estudiantes)</span>
+            </div>
+            <div class="analytics-summary-item">
+                <h4>Total de Entregas</h4>
+                <p>${numSubmissions}</p>
+                <span>estudiantes</span>
+            </div>
+        `;
+
+        // Renderizar preguntas difíciles
+        difficultQuestionsList.innerHTML = difficultQuestions.map(q => {
+            const totalAnswers = q.correct + q.incorrect;
+            const incorrectRate = totalAnswers > 0 ? (q.incorrect / totalAnswers) * 100 : 0;
+            return `
+            <div class="analytics-question-item">
+                <p>${q.pregunta}</p>
+                <span>${incorrectRate.toFixed(0)}% <small>(${q.incorrect} fallos)</small></span>
+            </div>`;
+        }).join('');
+
+        // Renderizar preguntas fáciles
+        easyQuestionsList.innerHTML = easyQuestions.map(q => {
+            const totalAnswers = q.correct + q.incorrect;
+            const correctRate = totalAnswers > 0 ? (q.correct / totalAnswers) * 100 : 0;
+            return `
+            <div class="analytics-question-item">
+                <p>${q.pregunta}</p>
+                <span>${correctRate.toFixed(0)}% <small>(${q.correct} aciertos)</small></span>
+            </div>`;
+        }).join('');
+
+    } catch (error) {
+        console.error("Error al calcular analíticas:", error);
+        analyticsSummaryGrid.innerHTML = '<p>Ocurrió un error al cargar las analíticas.</p>';
+        difficultQuestionsList.innerHTML = '<p>Error</p>';
+        easyQuestionsList.innerHTML = '<p>Error</p>';
+        Toastify({
+            text: `Error al cargar analíticas: ${error.message}`,
+            duration: 3000,
+            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" }
+        }).showToast();
+    }
+};
+
+
 const displayTeacherRooms = async (userId) => {
     // =============================================
-    // ¡MODIFICADO! (Paso 3.C) Se reemplaza texto de carga por spinner.
+    // ¡MODIFICADO! (Fase 13) Se reemplaza texto de carga por spinner.
     // =============================================
     roomsListContainer.innerHTML = loadingSpinner;
     const q = query(collection(db, "salas"), where("docenteId", "==", userId));
@@ -506,11 +651,15 @@ const displayTeacherRooms = async (userId) => {
             const roomId = doc.id;
             const roomCard = document.createElement('div');
             roomCard.className = 'room-card';
+            // =============================================
+            // ¡MODIFICADO! (Fase 14) Añadido el botón de analíticas
+            // =============================================
             roomCard.innerHTML = `
                 <div><h3>${room.titulo}</h3><p>Materia: ${room.materia}</p><div class="room-code">Código: <span>${room.codigoAcceso}</span></div></div>
                 <div class="room-actions">
                     <button class="manage-button" data-room-id="${roomId}">Gestionar Evaluación</button>
                     <button class="view-results-button" data-room-id="${roomId}" data-room-title="${room.titulo}">Ver Resultados</button>
+                    <button class="view-analytics-button" data-room-id="${roomId}" data-room-title="${room.titulo}">Ver Analíticas</button>
                 </div>`;
             roomsListContainer.appendChild(roomCard);
         });
@@ -518,7 +667,7 @@ const displayTeacherRooms = async (userId) => {
         console.error("Error fetching rooms:", error);
         roomsListContainer.innerHTML = '<p>Ocurrió un error al cargar tus salas.</p>';
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de error
+        // ¡MODIFICADO! (Fase 13) Toast de error
         // =============================================
          Toastify({
             text: "Error al cargar tus salas.",
@@ -544,7 +693,7 @@ const handleCreateRoom = async (e, userId) => {
         });
         
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de éxito
+        // ¡MODIFICADO! (Fase 13) Toast de éxito
         // =============================================
         Toastify({
             text: `¡Sala "${title}" creada con éxito! Código: ${accessCode}`,
@@ -557,7 +706,7 @@ const handleCreateRoom = async (e, userId) => {
     } catch (error) {
         console.error("Error creating room:", error);
         // =============================================
-        // ¡MODIFICADO! (Paso 3.C) Toast de error
+        // ¡MODIFICADO! (Fase 13) Toast de error
         // =============================================
          Toastify({
             text: "Ocurrió un error al crear la sala.",
@@ -589,7 +738,7 @@ const initializePanel = (userData) => {
 
     createRoomForm.addEventListener('submit', (e) => handleCreateRoom(e, userData.uid));
 
-    // (Listener sin cambios)
+    // Listener para los botones de las tarjetas de sala
     roomsListContainer.addEventListener('click', (e) => {
         const target = e.target;
         if (target.classList.contains('manage-button')) {
@@ -598,26 +747,32 @@ const initializePanel = (userData) => {
         if (target.classList.contains('view-results-button')) {
             handleShowResults(target.dataset.roomId, target.dataset.roomTitle);
         }
+        // =============================================
+        // ¡NUEVO! (Fase 14) Listener para el botón de analíticas
+        // =============================================
+        if (target.classList.contains('view-analytics-button')) {
+            handleShowAnalytics(target.dataset.roomId, target.dataset.roomTitle);
+        }
     });
 
-    // (Listener sin cambios)
+    // Listener para los botones "Volver"
     document.querySelectorAll('.back-to-main').forEach(btn => {
         btn.addEventListener('click', () => switchToView(mainView));
     });
 
-    // (Listeners sin cambios)
+    // Listeners para el modal de añadir/editar pregunta
     addNewQuestionBtn.addEventListener('click', openAddQuestionModal);
     addQuestionForm.addEventListener('submit', handleQuestionSubmit);
     cancelQuestionBtn.addEventListener('click', closeAddQuestionModal);
     
-    // (Listeners sin cambios)
+    // Listeners para el modal del banco de preguntas
     addFromBankBtn.addEventListener('click', openBankModal);
     cancelBankBtn.addEventListener('click', closeBankModal);
     subjectFilter.addEventListener('change', (e) => renderBankQuestions(e.target.value));
     addSelectedQuestionsBtn.addEventListener('click', handleAddFromBank);
 
     // =============================================
-    // ¡NUEVO! (Paso 3.C) Listeners para el modal de confirmación
+    // ¡NUEVO! (Fase 13) Listeners para el modal de confirmación
     // =============================================
     cancelDeleteBtn.addEventListener('click', closeDeleteConfirmModal);
     confirmDeleteBtn.addEventListener('click', handleExecuteDelete);
@@ -639,7 +794,6 @@ onAuthStateChanged(auth, async (user) => {
                     initializePanel(userData);
                 } else {
                     // Este alert() es aceptable porque es parte del guardián de ruta.
-                    // El usuario no debería estar aquí, así que una alerta abrupta es correcta.
                     alert("Acceso no autorizado."); 
                     window.location.href = 'index.html';
                 }
