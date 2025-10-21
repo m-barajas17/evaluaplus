@@ -441,3 +441,87 @@ body {
     flex-grow: 1;
     font-weight: 500;
 }
+/* ============================================= */
+/* ¡NUEVO! (Paso 3.A) Estilos para Indicador de Carga (Spinner) */
+/* ============================================= */
+
+/* Este es un spinner de carga simple hecho con CSS puro.
+  Usará los colores de nuestra paleta (var(--color-border) y var(--color-secondary)).
+*/
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid var(--color-border); /* El color gris de fondo del spinner */
+    border-bottom-color: var(--color-secondary); /* El color azul que gira */
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+    margin: 2rem auto;
+}
+
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Usaremos este contenedor para centrar el spinner 
+  dentro de #rooms-list, #results-list, etc.
+*/
+.loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 2rem 0;
+}
+
+
+/* ============================================= */
+/* ¡NUEVO! (Paso 3.A) Estilos para Modal de Confirmación */
+/* ============================================= */
+
+/* Hacemos el modal de confirmación más pequeño y centrado */
+.modal-content.confirm-modal {
+    max-width: 450px;
+    text-align: center;
+}
+
+/* Ajustamos el título y el párrafo de descripción */
+.modal-content.confirm-modal h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    border-bottom: none; /* Quitamos la línea divisoria */
+}
+
+.modal-content.confirm-modal p {
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+/* Reutilizamos la clase .modal-actions pero nos aseguramos
+  de que los botones estén centrados en este modal específico.
+*/
+.modal-content.confirm-modal .modal-actions {
+    justify-content: center;
+}
+
+/* El botón .cta-button.danger ya estaba definido en nuestro CSS,
+  por lo que aquí solo estamos confirmando que se usará.
+  ¡No es necesario añadir código nuevo si ya lo tenías!
+  Si no, esta es la regla:
+*/
+.cta-button.danger {
+    background: transparent;
+    color: var(--color-danger);
+    border: 2px solid var(--color-danger);
+}
+.cta-button.danger:hover {
+    background-color: var(--color-danger-bg);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
+}

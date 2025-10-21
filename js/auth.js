@@ -11,11 +11,10 @@ import {
 import {
     doc,
     setDoc,
-    // ¡NUEVA IMPORTACIÓN! Necesitamos getDoc para poder leer un documento específico.
     getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// --- LÓGICA DE REGISTRO (Sin cambios) ---
+// --- LÓGICA DE REGISTRO (¡ACTUALIZADA!) ---
 const registerForm = document.querySelector('#register-form');
 if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
@@ -35,12 +34,41 @@ if (registerForm) {
                 rol: role
             });
 
-            alert('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.');
-            window.location.href = 'login.html';
+            // =============================================
+            // ¡MODIFICADO! (Paso 2.1) Se reemplaza alert() por Toastify de éxito.
+            Toastify({
+                text: "¡Cuenta creada con éxito! Redirigiendo a login...",
+                duration: 3000,
+                gravity: "top", 
+                position: "right", 
+                style: {
+                    background: "linear-gradient(to right, #00b09b, #96c93d)", // Verde éxito
+                },
+                stopOnFocus: true, 
+            }).showToast();
+            // =============================================
+
+            // Esperamos 3 segundos (la duración del toast) antes de redirigir
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 3000);
 
         } catch (error) {
             console.error("Error al registrar el usuario:", error);
-            alert(`Ocurrió un error: ${error.message}`);
+            
+            // =============================================
+            // ¡MODIFICADO! (Paso 2.2) Se reemplaza alert() por Toastify de error.
+            Toastify({
+                text: `Ocurrió un error: ${error.message}`,
+                duration: 5000, // Los errores duran más para poder leerse
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: "linear-gradient(to right, #e74c3c, #c0392b)", // Rojo error
+                },
+                stopOnFocus: true,
+            }).showToast();
+            // =============================================
         }
     });
 }
@@ -55,42 +83,102 @@ if (loginForm) {
         const password = loginForm['password'].value;
 
         try {
-            // 1. Autenticamos al usuario como siempre.
+            // 1. Autenticamos al usuario
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // 2. ¡NUEVO! Antes de redirigir, consultamos su rol en Firestore.
-            // Creamos una referencia directa al documento del usuario usando su UID.
+            // 2. Consultamos su rol en Firestore
             const userDocRef = doc(db, "users", user.uid);
-            // Obtenemos los datos del documento.
             const userDocSnap = await getDoc(userDocRef);
 
-            // 3. Verificamos si el documento existe y tiene datos.
+            // 3. Verificamos si el documento existe y tiene datos
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data();
-                const userRole = userData.rol; // Obtenemos el campo 'rol'
+                const userRole = userData.rol; 
 
-                // 4. Redirigimos basándonos en el rol.
+                // 4. Redirigimos basándonos en el rol
                 if (userRole === 'docente') {
-                    alert('¡Bienvenido, Docente!');
-                    window.location.href = 'docente.html';
+                    // =============================================
+                    // ¡MODIFICADO! (Paso 2.3) Toast de bienvenida (Docente)
+                    // Usamos userData.nombre para un saludo personalizado.
+                    Toastify({
+                        text: `¡Bienvenido, ${userData.nombre}!`,
+                        duration: 2000,
+                        gravity: "top",
+                        position: "right",
+                        style: {
+                            // Usamos el gradiente de nuestro tema (definido en css/auth.css)
+                            background: "linear-gradient(135deg, #38BDF8, #3730A3)",
+                        },
+                        stopOnFocus: true,
+                    }).showToast();
+                    // =============================================
+                    setTimeout(() => { window.location.href = 'docente.html'; }, 2000);
+
                 } else if (userRole === 'estudiante') {
-                    alert('¡Bienvenido, Estudiante!');
-                    window.location.href = 'estudiante.html';
+                    // =============================================
+                    // ¡MODIFICADO! (Paso 2.4) Toast de bienvenida (Estudiante)
+                    Toastify({
+                        text: `¡Bienvenido, ${userData.nombre}!`,
+                        duration: 2000,
+                        gravity: "top",
+                        position: "right",
+                        style: {
+                            background: "linear-gradient(135deg, #38BDF8, #3730A3)",
+                        },
+                        stopOnFocus: true,
+                    }).showToast();
+                    // =============================================
+                    setTimeout(() => { window.location.href = 'estudiante.html'; }, 2000);
+
                 } else {
-                    // Caso de seguridad por si un usuario no tiene rol asignado.
-                    alert('No se pudo determinar tu rol. Redirigiendo a la página principal.');
-                    window.location.href = 'index.html';
+                    // =============================================
+                    // ¡MODIFICADO! (Paso 2.5) Toast de error (Rol no determinado)
+                    Toastify({
+                        text: "No se pudo determinar tu rol. Redirigiendo a la página principal.",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        style: {
+                            background: "linear-gradient(to right, #e74c3c, #c0392b)", // Rojo error
+                        },
+                        stopOnFocus: true,
+                    }).showToast();
+                    // =============================================
+                    setTimeout(() => { window.location.href = 'index.html'; }, 3000);
                 }
             } else {
-                // Caso de seguridad por si el usuario está autenticado pero no tiene registro en Firestore.
-                alert('No se encontraron datos adicionales del usuario.');
-                window.location.href = 'index.html';
+                // =============================================
+                // ¡MODIFICADO! (Paso 2.6) Toast de error (Documento no encontrado)
+                Toastify({
+                    text: "Error: No se encontraron datos adicionales para este usuario.",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    style: {
+                        background: "linear-gradient(to right, #e74c3c, #c0392b)", // Rojo error
+                    },
+                    stopOnFocus: true,
+                }).showToast();
+                // =============================================
+                setTimeout(() => { window.location.href = 'index.html'; }, 3000);
             }
 
         } catch (error) {
             console.error("Error al iniciar sesión:", error);
-            alert(`Error al iniciar sesión: ${error.message}`);
+            // =============================================
+            // ¡MODIFICADO! (Paso 2.7) Toast de error (Error genérico de login)
+            Toastify({
+                text: `Error al iniciar sesión: ${error.message}`,
+                duration: 5000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: "linear-gradient(to right, #e74c3c, #c0392b)", // Rojo error
+                },
+                stopOnFocus: true,
+            }).showToast();
+            // =============================================
         }
     });
 }

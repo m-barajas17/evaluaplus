@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/docente.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 <body>
     <header class="header">
@@ -162,7 +163,19 @@
         </div>
     </div>
 
+    <div id="confirm-delete-modal" class="modal-overlay">
+        <div class="modal-content confirm-modal">
+            <h2 id="confirm-modal-title">¿Estás seguro?</h2>
+            <p id="confirm-modal-text">Esta acción no se puede deshacer.</p>
+            <div class="modal-actions">
+                <button type="button" id="cancel-delete-btn" class="cta-button secondary">Cancelar</button>
+                <button type="button" id="confirm-delete-btn" class="cta-button danger">Confirmar Eliminación</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/docente.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </body>
 </html>

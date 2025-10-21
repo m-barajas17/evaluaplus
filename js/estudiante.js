@@ -15,6 +15,12 @@ import {
     addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// =============================================
+// ¡NUEVO! (Paso 4.B) Constante para el Spinner
+// =============================================
+const loadingSpinner = '<div class="loader-container"><div class="loader"></div></div>';
+
+
 // --- REFERENCIAS A ELEMENTOS DEL DOM ---
 const userNameElement = document.getElementById('user-name');
 const logoutButton = document.getElementById('logout-button');
@@ -48,6 +54,7 @@ let studentData = {
  * Cierra el modal de revisión de la evaluación.
  */
 const closeReviewModal = () => {
+    // (Lógica sin cambios)
     reviewModal.style.opacity = '0';
     setTimeout(() => {
         reviewModal.style.display = 'none';
@@ -59,7 +66,10 @@ const closeReviewModal = () => {
  * @param {string} resultId - El ID del documento del resultado en Firestore.
  */
 const showReview = async (resultId) => {
-    reviewContentContainer.innerHTML = '<p>Cargando revisión...</p>';
+    // =============================================
+    // ¡MODIFICADO! (Paso 4.B) Se reemplaza texto de carga por spinner.
+    // =============================================
+    reviewContentContainer.innerHTML = loadingSpinner;
     reviewModal.style.display = 'flex';
     setTimeout(() => reviewModal.style.opacity = '1', 10);
 
@@ -86,6 +96,7 @@ const showReview = async (resultId) => {
         reviewModalTitle.textContent = `Revisión de "${roomData.titulo}"`;
 
         // 3. Construir el HTML de la revisión.
+        // (Lógica de construcción de HTML sin cambios)
         let reviewHTML = '';
         const studentResponses = resultData.respuestas; // Array con las respuestas del estudiante
         const questions = roomData.preguntas; // Array con las preguntas originales
@@ -125,12 +136,25 @@ const showReview = async (resultId) => {
     } catch (error) {
         console.error("Error al mostrar la revisión:", error);
         reviewContentContainer.innerHTML = '<p>Ocurrió un error al cargar la revisión.</p>';
+        // =============================================
+        // ¡MODIFICADO! (Paso 4.B) Toast de error
+        // =============================================
+        Toastify({
+            text: "Error al cargar la revisión.",
+            duration: 3000,
+            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" } // Rojo error
+        }).showToast();
     }
 };
 
 
 // --- LÓGICA PARA MOSTRAR HISTORIAL (ACTUALIZADA) ---
 const displayStudentHistory = async (studentId) => {
+    // =============================================
+    // ¡MODIFICADO! (Paso 4.B) Se reemplaza texto de carga por spinner.
+    // =============================================
+    historyListContainer.innerHTML = loadingSpinner;
+    
     const q = query(collection(db, "resultados"), where("estudianteId", "==", studentId));
     
     try {
@@ -141,6 +165,7 @@ const displayStudentHistory = async (studentId) => {
         }
         historyListContainer.innerHTML = '';
         
+        // (Lógica de renderizado sin cambios)
         for (const resultDoc of querySnapshot.docs) {
             const resultData = resultDoc.data();
             const roomDocRef = doc(db, "salas", resultData.salaId);
@@ -163,12 +188,21 @@ const displayStudentHistory = async (studentId) => {
     } catch (error) {
         console.error("Error al obtener el historial:", error);
         historyListContainer.innerHTML = '<p>Ocurrió un error al cargar tu historial.</p>';
+        // =============================================
+        // ¡MODIFICADO! (Paso 4.B) Toast de error
+        // =============================================
+        Toastify({
+            text: "Error al cargar tu historial.",
+            duration: 3000,
+            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" } // Rojo error
+        }).showToast();
     }
 };
 
 
 // --- LÓGICA DE CALIFICACIÓN Y FINALIZACIÓN ---
 const handleFinishEvaluation = async () => {
+    // (Lógica de calificación sin cambios)
     saveCurrentAnswer();
     let score = 0;
     currentEvaluation.questions.forEach((question, index) => {
@@ -200,14 +234,34 @@ const handleFinishEvaluation = async () => {
                 <p style="margin-top: 1.5rem;">Ahora puedes ver la revisión detallada en tu historial.</p>
             </div>`;
         evaluationSection.innerHTML = resultsHTML;
+
+        // =============================================
+        // ¡MODIFICADO! (Paso 4.B) Toast de éxito
+        // =============================================
+        Toastify({
+            text: "¡Evaluación guardada con éxito!",
+            duration: 3000,
+            style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } // Verde éxito
+        }).showToast();
+
+        // Actualiza el historial para que aparezca la nueva evaluación
         await displayStudentHistory(studentData.uid);
+
     } catch (error) {
         console.error("Error al guardar el resultado:", error);
-        alert("Ocurrió un error al guardar tu resultado.");
+        // =============================================
+        // ¡MODIFICADO! (Paso 4.B) Toast de error
+        // =============================================
+        Toastify({
+            text: "Ocurrió un error al guardar tu resultado.",
+            duration: 3000,
+            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" } // Rojo error
+        }).showToast();
     }
 };
 
 // --- LÓGICA PARA RENDERIZAR LA EVALUACIÓN ---
+// (Toda esta sección no tiene cambios, ya que no contenía alerts ni cargas)
 const saveCurrentAnswer = () => {
     const selectedOption = document.querySelector('input[name="question"]:checked');
     if (selectedOption) {
@@ -260,18 +314,58 @@ const handleJoinRoom = async (e) => {
     e.preventDefault();
     const roomCode = joinRoomForm['room-code'].value.trim().toUpperCase();
     if (!roomCode) return;
+
+    // =============================================
+    // ¡NUEVO! (Paso 4.B) Toast de "Buscando..."
+    // =============================================
+    const searchingToast = Toastify({
+        text: "Buscando sala...",
+        duration: -1, // Dura indefinidamente
+        gravity: "bottom",
+        position: "center",
+        style: {
+            background: "linear-gradient(135deg, #38BDF8, #3730A3)",
+        }
+    }).showToast();
+
     const q = query(collection(db, "salas"), where("codigoAcceso", "==", roomCode));
     try {
         const querySnapshot = await getDocs(q);
+        
+        searchingToast.hideToast(); // Oculta el toast de "Buscando..."
+
         if (querySnapshot.empty) {
-            alert("Código incorrecto. No se encontró ninguna sala.");
+            // =============================================
+            // ¡MODIFICADO! (Paso 4.B) Toast de aviso
+            // =============================================
+            Toastify({
+                text: "Código incorrecto. No se encontró ninguna sala.",
+                duration: 3000,
+                style: { background: "linear-gradient(to right, #f59e0b, #d97706)" } // Naranja aviso
+            }).showToast();
         } else {
             const roomDoc = querySnapshot.docs[0];
+            // =============================================
+            // ¡MODIFICADO! (Paso 4.B) Toast de éxito
+            // =============================================
+             Toastify({
+                text: `¡Unido a "${roomDoc.data().titulo}"!`,
+                duration: 2000,
+                style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } // Verde éxito
+            }).showToast();
             startEvaluation(roomDoc.data(), roomDoc.id);
         }
     } catch (error) {
         console.error("Error al buscar la sala:", error);
-        alert("Ocurrió un error al intentar unirse a la sala.");
+        searchingToast.hideToast(); // Oculta el toast de "Buscando..."
+        // =============================================
+        // ¡MODIFICADO! (Paso 4.B) Toast de error
+        // =============================================
+        Toastify({
+            text: "Ocurrió un error al intentar unirse a la sala.",
+            duration: 3000,
+            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" } // Rojo error
+        }).showToast();
     }
 };
 
@@ -287,11 +381,20 @@ const initializePanel = (userData) => {
             window.location.href = 'login.html';
         } catch (error) {
             console.error("Error al cerrar sesión:", error);
+            // =============================================
+            // ¡MODIFICADO! (Paso 4.B) Toast de error
+            // =============================================
+            Toastify({
+                text: "Error al cerrar sesión.",
+                duration: 3000,
+                style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" } // Rojo error
+            }).showToast();
         }
     });
 
     joinRoomForm.addEventListener('submit', handleJoinRoom);
 
+    // (Listener sin cambios)
     evaluationSection.addEventListener('click', (e) => {
         if (e.target.id === 'next-btn') {
             saveCurrentAnswer();
@@ -309,6 +412,7 @@ const initializePanel = (userData) => {
     });
     
     // --- ¡NUEVO! EVENT LISTENERS PARA EL MODAL ---
+    // (Listeners sin cambios)
     historyListContainer.addEventListener('click', (e) => {
         const historyItem = e.target.closest('.history-item');
         if (historyItem) {
@@ -329,6 +433,7 @@ const initializePanel = (userData) => {
 
 // --- GUARDIÁN DE RUTA ---
 onAuthStateChanged(auth, async (user) => {
+    // (Lógica sin cambios, los errores aquí redirigen, no usan toasts)
     if (user) {
         const userUid = user.uid;
         const userDocRef = doc(db, "users", userUid);

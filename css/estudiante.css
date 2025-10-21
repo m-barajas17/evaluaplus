@@ -421,3 +421,41 @@ body {
     background-color: #FEE2E2;
     color: #991B1B;
 }
+/* ============================================= */
+/* ¡NUEVO! (Paso 4.A) Estilos para Indicador de Carga (Spinner) */
+/* ============================================= */
+
+/* Este es un spinner de carga simple hecho con CSS puro.
+  Usará los colores de nuestra paleta (var(--color-border) y var(--color-secondary)).
+*/
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid var(--color-border); /* El color gris de fondo del spinner */
+    border-bottom-color: var(--color-secondary); /* El color azul que gira */
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+    margin: 2rem auto;
+}
+
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Usaremos este contenedor para centrar el spinner 
+  dentro de #history-list y #review-content-container.
+*/
+.loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 2rem 0;
+}
