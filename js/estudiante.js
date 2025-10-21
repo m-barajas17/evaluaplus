@@ -327,14 +327,33 @@ const saveCurrentAnswer = () => {
 };
 
 const displayQuestion = () => {
+    // =============================================
+    // ¡MODIFICADO! (Fase 17) Renderizado dinámico de opciones
+    // =============================================
     const questionData = currentEvaluation.questions[currentQuestionIndex];
     const savedAnswer = studentAnswers[currentQuestionIndex];
-    const optionsHTML = Object.entries(questionData.opciones).map(([key, value]) => `
-        <label class="option">
-            <input type="radio" name="question" value="${key}" ${savedAnswer === key ? 'checked' : ''}>
-            <span><strong>${key})</strong> ${value}</span>
-        </label>
-    `).join('');
+
+    // ¡NUEVA LÓGICA DE RENDERIZADO!
+    const questionType = questionData.tipo || 'multipleChoice'; // Asume M/C por retrocompatibilidad
+    let optionsHTML = '';
+
+    if (questionType === 'multipleChoice') {
+        optionsHTML = Object.entries(questionData.opciones).map(([key, value]) => `
+            <label class="option">
+                <input type="radio" name="question" value="${key}" ${savedAnswer === key ? 'checked' : ''}>
+                <span><strong>${key})</strong> ${value}</span>
+            </label>
+        `).join('');
+    } else if (questionType === 'trueFalse') {
+        // Genera HTML solo para Verdadero (A) y Falso (B)
+        optionsHTML = Object.entries(questionData.opciones).map(([key, value]) => `
+            <label class="option">
+                <input type="radio" name="question" value="${key}" ${savedAnswer === key ? 'checked' : ''}>
+                <span><strong>${key})</strong> ${value}</span>
+            </label>
+        `).join('');
+    }
+
     const evaluationHTML = `
         <h2>${currentEvaluation.title}</h2>
         <div class="question-container">

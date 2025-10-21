@@ -13,7 +13,7 @@
 <body>
     <header class="header">
         <div class="header-container">
-            <<a href="index.html" class="logo">
+            <a href="index.html" class="logo">
                <span>Evalúa+</span>
             </a>
             <div class="user-info">
@@ -124,32 +124,59 @@
                     <textarea id="question-text" rows="3" required></textarea>
                 </div>
 
-                <div class="options-group">
-                    <div class="input-group">
-                        <label for="option-a">Opción A</label>
-                        <input type="text" id="option-a" required>
+                <div class="input-group">
+                    <label for="question-type">Tipo de Pregunta</label>
+                    <select id="question-type" name="question-type">
+                        <option value="multipleChoice">Opción Múltiple (A, B, C, D)</option>
+                        <option value="trueFalse">Verdadero o Falso</option>
+                    </select>
+                </div>
+
+                <div id="options-multiple-choice">
+                    <div class="options-group">
+                        <div class="input-group">
+                            <label for="option-a">Opción A</label>
+                            <input type="text" id="option-a" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="option-b">Opción B</label>
+                            <input type="text" id="option-b" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="option-c">Opción C</label>
+                            <input type="text" id="option-c" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="option-d">Opción D</label>
+                            <input type="text" id="option-d" required>
+                        </div>
                     </div>
-                    <div class="input-group">
-                        <label for="option-b">Opción B</label>
-                        <input type="text" id="option-b" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="option-c">Opción C</label>
-                        <input type="text" id="option-c" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="option-d">Opción D</label>
-                        <input type="text" id="option-d" required>
+                </div>
+
+                <div id="options-true-false" style="display: none;">
+                    <div class="options-group">
+                        <div class="input-group">
+                            <label for="option-a-tf">Opción A (Verdadero)</label>
+                            <input type="text" id="option-a-tf" value="Verdadero" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label for="option-b-tf">Opción B (Falso)</label>
+                            <input type="text" id="option-b-tf" value="Falso" readonly>
+                        </div>
                     </div>
                 </div>
 
                 <div class="input-group">
                     <label>Respuesta Correcta</label>
-                    <div class="correct-answer-selector">
+                    <div id="correct-answer-mc" class="correct-answer-selector">
                         <label><input type="radio" name="correct-answer" value="A" checked> A</label>
                         <label><input type="radio" name="correct-answer" value="B"> B</label>
                         <label><input type="radio" name="correct-answer" value="C"> C</label>
                         <label><input type="radio" name="correct-answer" value="D"> D</label>
+                    </div>
+                    <div id="correct-answer-tf" class="correct-answer-selector" style="display: none;">
+                        <label><input type="radio" name="correct-answer-tf" value="A" checked> Verdadero</label>
+                        <label><input type="radio" name="correct-answer-tf" value="B"> Falso</label>
                     </div>
                 </div>
 

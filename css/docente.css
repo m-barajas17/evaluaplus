@@ -92,7 +92,8 @@ body {
 }
 
 .input-group input,
-.input-group textarea {
+.input-group textarea,
+.input-group select {
     width: 100%;
     padding: 0.75rem 1rem;
     border-radius: 8px;
@@ -100,10 +101,12 @@ body {
     font-size: 1rem;
     font-family: var(--font-family);
     transition: border-color var(--transition-speed);
+    background-color: var(--color-surface); /* Asegura fondo blanco para select */
 }
 
 .input-group input:focus,
-.input-group textarea:focus {
+.input-group textarea:focus,
+.input-group select:focus {
     outline: none;
     border-color: var(--color-secondary);
 }
@@ -185,7 +188,7 @@ body {
     gap: 0.75rem;
 }
 
-.manage-button, .view-results-button {
+.manage-button, .view-results-button, .view-analytics-button {
     width: 100%;
     padding: 0.7rem 1.5rem;
     border-radius: 8px;
@@ -726,4 +729,11 @@ body {
     margin-top: 0.5rem;
     font-size: 0.85rem;
     color: var(--color-text-muted);
+}
+
+/* ¡NUEVA REGLA - PASO 1 FASE 17 */
+.input-group input:read-only {
+    background-color: var(--color-background);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
 }
