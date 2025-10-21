@@ -1,0 +1,120 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- FUNCIONES DE AYUDA GLOBALES ---
+    // Estas funciones nos ayudan a no repetir código.
+
+    // Función 1: Verifica si el usuario ha iniciado sesión.
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Función 2: Verifica si el usuario es el "propietario" de un documento.
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    // Función 3: Obtiene los datos del documento del usuario (para leer su rol).
+    function getUserData() {
+      // get() nos permite leer un documento de la base de datos
+      // mientras evaluamos la regla.
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Función 4: Verifica si el usuario tiene un rol específico.
+    function isRole(roleName) {
+      return isAuth() && getUserData().rol == roleName;
+    }
+
+
+    // --- REGLAS PARA COLECCIÓN 'users' ---
+    // userId es una "variable comodín" que captura el ID del documento
+    match /users/{userId} {
+      
+      // Permite la lectura (get) SOLAMENTE si el usuario es el propietario.
+      allow get: if isOwner(userId);
+
+      // Permite la creación (create) SOLAMENTE si el usuario está creando su
+      // propio documento (su UID debe coincidir con el ID del doc).
+      allow create: if isOwner(userId);
+      
+      // Prohibimos explícitamente que alguien pueda listar
+      // todos los usuarios de la plataforma.
+      allow list: if false;
+
+      // Prohibimos explícitamente actualizar o borrar documentos de usuario.
+      allow update, delete: if false;
+    }
+
+    // (Aquí es donde añadiremos las reglas para 'salas' en el siguiente paso)
+      // --- REGLAS PARA COLECCIÓN 'salas' ---
+    // {roomId} es un comodín para cualquier ID de documento en 'salas'
+    match /salas/{roomId} {
+
+      // 'allow read' aplica a 'get' (leer un doc) y 'list' (leer una colección)
+      // Permitimos la lectura si el usuario simplemente ha iniciado sesión.
+      // Esto es necesario para que los estudiantes busquen salas por código.
+      allow read: if isAuth();
+
+      // 'allow write' se divide en 'create', 'update', 'delete'.
+
+      // CREAR:
+      // Permitimos 'create' SI el usuario tiene el rol de 'docente'.
+      allow create: if isRole('docente');
+
+      // ACTUALIZAR Y BORRAR:
+      // Permitimos 'update' y 'delete' SI:
+      // 1. El usuario es un 'docente'.
+      // 2. El 'docenteId' guardado DENTRO del documento de la sala
+      //    coincide con el UID del usuario que hace la solicitud.
+      //
+      // 'resource.data' es el documento como existe ANTES de la actualización.
+      allow update, delete: if isRole('docente') 
+                            && resource.data.docenteId == request.auth.uid;
+    }
+    // --- REGLAS PARA COLECCIÓN 'resultados' ---
+    match /resultados/{resultId} {
+
+      // CREAR:
+      // Permitimos 'create' SI:
+      // 1. El usuario es un 'estudiante'.
+      // 2. El campo 'estudianteId' del NUEVO documento que se intenta crear
+      //    coincide con el UID del usuario.
+      //
+      // 'request.resource.data' es el documento como se verá DESPUÉS de la creación.
+      allow create: if isRole('estudiante')
+                    && request.resource.data.estudianteId == request.auth.uid;
+
+      // LEER:
+      // Permitimos 'read' (get y list) SI:
+      // 1. El usuario es un 'docente' (para que pueda consultar por salaId).
+      // 2. O SI el 'estudianteId' del documento que se intenta leer
+      //    coincide con el UID del usuario (para que vea su historial).
+      //
+      // 'resource.data' es el documento que se está intentando leer.
+      allow read: if isRole('docente') 
+                  || resource.data.estudianteId == request.auth.uid;
+      
+      // ACTUALIZAR Y BORRAR:
+      // Prohibimos explícitamente a todos. Los resultados son finales.
+      allow update, delete: if false;
+    }
+    // --- REGLAS PARA COLECCIÓN 'bancoPreguntas' ---
+    match /bancoPreguntas/{preguntaId} {
+
+      // CREAR:
+      // Un docente solo puede CREAR una pregunta si la firma
+      // con su propio UID en el campo 'docenteId'.
+      allow create: if isRole('docente')
+                    && request.resource.data.docenteId == request.auth.uid;
+
+      // LEER, ACTUALIZAR, BORRAR:
+      // Un docente solo puede LEER, ACTUALIZAR o BORRAR una pregunta
+      // si el 'docenteId' del documento coincide con su UID.
+      allow read, update, delete: if isRole('docente')
+                                && resource.data.docenteId == request.auth.uid;
+    }
+  }
+}
