@@ -44,10 +44,6 @@ const addFromBankBtn = document.getElementById('add-from-bank-btn');
 // =============================================
 const analyticsView = document.getElementById('analytics-view');
 const analyticsTitle = document.getElementById('analytics-title');
-const analyticsSummaryGrid = document.getElementById('analytics-summary-grid');
-const difficultQuestionsList = document.getElementById('difficult-questions-list');
-const easyQuestionsList = document.getElementById('easy-questions-list');
-
 
 // --- QUESTION MODAL REFERENCES ---
 const addQuestionModal = document.getElementById('add-question-modal');
@@ -79,6 +75,12 @@ let currentRoomId = null;
 let currentUserId = null;
 let editingQuestionIndex = null;
 let bankQuestionsCache = []; 
+
+// =============================================
+// ¡NUEVO! (Fase 15) Instancias de los gráficos
+// =============================================
+let summaryChartInstance = null;
+let performanceChartInstance = null;
 
 // =============================================
 // ¡NUEVO! (Fase 13) Variable de estado para el borrado
@@ -502,11 +504,28 @@ const handleShowResults = async (roomId, roomTitle) => {
 const handleShowAnalytics = async (roomId, roomTitle) => {
     analyticsTitle.textContent = `Analíticas de "${roomTitle}"`;
     switchToView(analyticsView);
+    // =============================================
+    // ¡NUEVO! (Paso 4.3) Destruir gráficos anteriores
+    // =============================================
+    // Esto es CRÍTICO para evitar que se sobrepongan
+    // gráficos antiguos al cargar analíticas de otra sala.
+    if (summaryChartInstance) {
+        summaryChartInstance.destroy();
+        summaryChartInstance = null;
+    }
+    if (performanceChartInstance) {
+        performanceChartInstance.destroy();
+        performanceChartInstance = null;
+    }
 
     // 1. Mostrar estado de carga
-    analyticsSummaryGrid.innerHTML = loadingSpinner;
-    difficultQuestionsList.innerHTML = loadingSpinner;
-    easyQuestionsList.innerHTML = loadingSpinner;
+    // ¡MODIFICADO! (Paso 4.3) Apuntamos a los nuevos canvas
+    // (Opcional, pero buena práctica)
+    const summaryCtx = document.getElementById('summary-chart');
+    const performanceCtx = document.getElementById('question-performance-chart');
+    
+    // (Ya no necesitamos mostrar spinners en las listas, 
+    // los gráficos tienen su propia animación de carga)
 
     try {
         // 2. Obtener los datos necesarios en paralelo
@@ -578,46 +597,125 @@ const handleShowAnalytics = async (roomId, roomTitle) => {
 
         // 7. Renderizar HTML
 
-        // Renderizar resumen
-        analyticsSummaryGrid.innerHTML = `
-            <div class="analytics-summary-item">
-                <h4>Calificación Promedio</h4>
-                <p>${averageScore.toFixed(1)} / ${numQuestions}</p>
-                <span>(${averagePercentage.toFixed(0)}%)</span>
-            </div>
-            <div class="analytics-summary-item">
-                <h4>Tasa de Aprobación</h4>
-                <p>${approvalRate.toFixed(0)}%</p>
-                <span>(${approvedCount} de ${numSubmissions} estudiantes)</span>
-            </div>
-            <div class="analytics-summary-item">
-                <h4>Total de Entregas</h4>
-                <p>${numSubmissions}</p>
-                <span>estudiantes</span>
-            </div>
-        `;
+        // =============================================
+        // ¡MODIFICADO! (Paso 4.4) Renderizar Gráficos con Chart.js
+        // =============================================
 
-        // Renderizar preguntas difíciles
-        difficultQuestionsList.innerHTML = difficultQuestions.map(q => {
-            const totalAnswers = q.correct + q.incorrect;
-            const incorrectRate = totalAnswers > 0 ? (q.incorrect / totalAnswers) * 100 : 0;
-            return `
-            <div class="analytics-question-item">
-                <p>${q.pregunta}</p>
-                <span>${incorrectRate.toFixed(0)}% <small>(${q.incorrect} fallos)</small></span>
-            </div>`;
-        }).join('');
+        // 7.A. Renderizar Gráfico de Dona (Resumen de Aprobación)
+        const summaryCtx = document.getElementById('summary-chart').getContext('2d');
+        const reprobadosCount = numSubmissions - approvedCount;
 
-        // Renderizar preguntas fáciles
-        easyQuestionsList.innerHTML = easyQuestions.map(q => {
-            const totalAnswers = q.correct + q.incorrect;
-            const correctRate = totalAnswers > 0 ? (q.correct / totalAnswers) * 100 : 0;
-            return `
-            <div class="analytics-question-item">
-                <p>${q.pregunta}</p>
-                <span>${correctRate.toFixed(0)}% <small>(${q.correct} aciertos)</small></span>
-            </div>`;
-        }).join('');
+        summaryChartInstance = new Chart(summaryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    'Aprobados',
+                    'Reprobados'
+                ],
+                datasets: [{
+                    label: 'Estudiantes',
+                    data: [approvedCount, reprobadosCount],
+                    backgroundColor: [
+                        'rgba(52, 211, 153, 0.7)', // Verde (Aprobado)
+                        'rgba(239, 68, 68, 0.7)'    // Rojo (Reprobado)
+                    ],
+                    borderColor: [
+                        'rgba(52, 211, 153, 1)',
+                        'rgba(239, 68, 68, 1)'
+                    ],
+                    borderWidth: 1,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.raw || 0;
+                                let percentage = ((value / numSubmissions) * 100).toFixed(0);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 7.B. Renderizar Gráfico de Barras (Rendimiento por Pregunta)
+        
+        // Preparamos los datos para el gráfico de barras
+        const labels = questionStats.map((stat, index) => `Pregunta ${index + 1}`);
+        const aciertosData = questionStats.map(stat => stat.correct);
+        const fallosData = questionStats.map(stat => stat.incorrect);
+        
+        const performanceCtx = document.getElementById('question-performance-chart').getContext('2d');
+        
+        performanceChartInstance = new Chart(performanceCtx, {
+            type: 'bar', // Gráfico de barras
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Aciertos',
+                        data: aciertosData,
+                        backgroundColor: 'rgba(74, 222, 128, 0.7)', // Verde
+                        borderColor: 'rgba(74, 222, 128, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Fallos',
+                        data: fallosData,
+                        backgroundColor: 'rgba(248, 113, 113, 0.7)', // Rojo
+                        borderColor: 'rgba(248, 113, 113, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y', // ¡Esto lo hace un gráfico de barras horizontal!
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true, // Apilamos las barras (opcional, pero se ve bien)
+                        title: {
+                            display: true,
+                            text: 'Número de Respuestas'
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            // Mostramos el texto de la pregunta en el tooltip
+                            title: function(tooltipItems) {
+                                const index = tooltipItems[0].dataIndex;
+                                // Truncamos el texto si es muy largo
+                                const preguntaTexto = questionStats[index].pregunta;
+                                return preguntaTexto.length > 70 ? preguntaTexto.substring(0, 70) + '...' : preguntaTexto;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+
+
 
     } catch (error) {
         console.error("Error al calcular analíticas:", error);

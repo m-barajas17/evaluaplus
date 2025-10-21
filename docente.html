@@ -67,21 +67,25 @@
                     <button class="cta-button secondary back-to-main">Volver a Mis Salas</button>
                 </div>
 
-                <div id="analytics-summary-grid" class="analytics-grid">
+                <div class="charts-container">
+                    
+                    <div class="chart-wrapper">
+                        <h3>Resumen de Aprobación</h3>
+                        <div class="chart-container" style="max-height: 350px; position: relative; margin: 0 auto; max-width: 350px;">
+                            <canvas id="summary-chart"></canvas>
+                        </div>
                     </div>
-
-                <div class="analytics-lists">
-                    <div class="card">
-                        <h3>Preguntas Más Difíciles (Más falladas)</h3>
-                        <div id="difficult-questions-list">
-                            </div>
-                    </div>
-                    <div class="card">
-                        <h3>Preguntas Más Fáciles (Más acertadas)</h3>
-                        <div id="easy-questions-list">
-                            </div>
+                    
+                    <div class="chart-wrapper">
+                        <h3>Rendimiento por Pregunta (Aciertos vs. Fallos)</h3>
+                        <div class="chart-container" style="max-height: 500px; position: relative;">
+                            <canvas id="question-performance-chart"></canvas>
+                        </div>
                     </div>
                 </div>
+
+            </section>
+        </div>
 
             </section>
         </div>
@@ -203,5 +207,6 @@
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/docente.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </body>
 </html>

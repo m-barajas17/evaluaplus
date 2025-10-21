@@ -661,3 +661,51 @@ body {
     font-weight: 400;
     color: var(--color-text-muted);
 }
+
+/* --- (Al final de css/docente.css) --- */
+
+/* ============================================= */
+/* ¡NUEVO! (Fase 15) Estilos para Gráficos de Analíticas */
+/* ============================================= */
+
+/* Contenedor principal para los dos gráficos */
+.charts-container {
+    display: grid;
+    grid-template-columns: 1fr; /* Apilados por defecto en móvil */
+    gap: 3rem; /* Espacio generoso entre los gráficos */
+    margin-top: 2rem;
+}
+
+/* Estilo para cada "caja" de gráfico (título + canvas) */
+.chart-wrapper {
+    background-color: #f9fafb;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+}
+
+.chart-wrapper h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+/* Este es el contenedor directo del <canvas>.
+  La 'position: relative' es crucial para que 
+  Chart.js maneje la responsividad correctamente.
+*/
+.chart-container {
+    position: relative;
+    width: 100%;
+}
+
+/* Media query para ponerlos uno al lado del otro en pantallas grandes */
+@media (min-width: 992px) {
+    .charts-container {
+        /* Lado a lado en pantallas de 992px o más */
+        grid-template-columns: 1fr 1fr; 
+        gap: 1.5rem;
+    }
+}
