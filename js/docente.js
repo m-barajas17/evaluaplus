@@ -38,6 +38,11 @@ const questionsTitle = document.getElementById('questions-title');
 const questionsListContainer = document.getElementById('questions-list-container');
 const addNewQuestionBtn = document.getElementById('add-new-question-btn');
 const addFromBankBtn = document.getElementById('add-from-bank-btn');
+// =============================================
+// ¡NUEVO! (Fase 21) Referencia al botón CSV
+// =============================================
+const exportCsvBtn = document.getElementById('export-csv-btn');
+
 
 // =============================================
 // ¡NUEVO! (Fase 14) Referencias a la Vista de Analíticas
@@ -87,6 +92,11 @@ let currentRoomId = null;
 let currentUserId = null;
 let editingQuestionIndex = null;
 let bankQuestionsCache = []; 
+// =============================================
+// ¡NUEVO! (Fase 21) Caché para los resultados
+// =============================================
+let currentResultsData = [];
+
 
 // =============================================
 // ¡NUEVO! (Fase 15) Instancias de los gráficos
@@ -467,6 +477,104 @@ const handleAddFromBank = async () => {
     }
 };
 
+
+// =============================================
+// ¡NUEVO! (Fase 21) Funciones de Exportación CSV
+// =============================================
+/**
+ * Convierte un array de objetos de resultado en un string CSV.
+ * @param {Array<Object>} data - El array de `currentResultsData`.
+ * @returns {string} - El contenido del archivo CSV como un string.
+ */
+const generateCSV = (data) => {
+    // Define las columnas que queremos en el CSV
+    const headers = ["Nombre Estudiante", "Calificacion", "Total Preguntas"];
+    let csvRows = [headers.join(',')]; // Fila de encabezado
+
+    // Itera sobre cada resultado y extrae los valores
+    data.forEach(result => {
+        const values = [
+            `"${result.nombreEstudiante}"`, // Usar comillas por si hay comas en el nombre
+            result.calificacion,
+            result.totalPreguntas
+        ];
+        csvRows.push(values.join(','));
+    });
+
+    return csvRows.join('\n'); // Une todas las filas con saltos de línea
+};
+
+/**
+ * Dispara la descarga del navegador para un archivo CSV.
+ * @param {string} csvContent - El string CSV generado por `generateCSV`.
+ * @param {string} fileName - El nombre del archivo (ej: "mi_evaluacion.csv").
+ */
+const downloadCSV = (csvContent, fileName) => {
+    // Crea un objeto Blob con el contenido y el tipo MIME correcto
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+
+    if (link.download !== undefined) { // Detección de feature
+        // Crea una URL para el Blob
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", fileName);
+        link.style.visibility = 'hidden';
+        
+        // Añade el link al DOM, simula el clic y lo remueve
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+};
+
+/**
+ * Orquesta la exportación a CSV usando los datos cacheados.
+ */
+const handleExportCSV = async () => {
+    if (currentResultsData.length === 0) {
+        Toastify({ 
+            text: "No hay resultados para exportar.",
+            duration: 3000,
+            style: { background: "linear-gradient(to right, #f59e0b, #d97706)" } // Naranja aviso
+        }).showToast();
+        return;
+    }
+
+    // 1. Obtener nombre de la sala para el archivo
+    let roomTitle = "resultados_evaluaplus"; // Título por defecto
+    try {
+        const roomDocRef = doc(db, "salas", currentRoomId);
+        const roomDocSnap = await getDoc(roomDocRef);
+        if (roomDocSnap.exists()) {
+            // Reemplaza espacios y caracteres no válidos para nombres de archivo
+            roomTitle = roomDocSnap.data().titulo.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        }
+    } catch (e) {
+        console.error("Error al obtener nombre de sala para CSV:", e);
+    }
+
+    // 2. Generar y Descargar
+    try {
+        const csvContent = generateCSV(currentResultsData);
+        downloadCSV(csvContent, `${roomTitle}_resultados.csv`);
+
+        Toastify({
+            text: "¡Exportación completada!",
+            duration: 3000,
+            style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } // Verde éxito
+        }).showToast();
+    } catch (error) {
+        console.error("Error al generar/descargar CSV:", error);
+        Toastify({
+            text: "Ocurrió un error al generar el archivo.",
+            duration: 3000,
+            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" } // Rojo error
+        }).showToast();
+    }
+};
+
+
 // --- VIEW MANAGEMENT & RENDERING ---
 const switchToView = (viewToShow) => {
     // (Sin cambios)
@@ -526,20 +634,36 @@ const displayQuestionsForRoom = async (roomId) => {
     }
 };
 
+// =============================================
+// ¡MODIFICADO! (Fase 21) para usar el caché
+// =============================================
 const handleShowResults = async (roomId, roomTitle) => {
-    // (Sin cambios)
+    currentRoomId = roomId; // ¡Importante! Setear el ID de la sala actual
     resultsTitle.textContent = `Resultados de "${roomTitle}"`;
     resultsList.innerHTML = loadingSpinner;
+    currentResultsData = []; // Limpiar el caché de resultados anterior
+    
     const q = query(collection(db, "resultados"), where("salaId", "==", roomId));
 
     try {
         const querySnapshot = await getDocs(q);
-        resultsList.innerHTML = querySnapshot.empty
-            ? '<p>Aún no hay resultados para esta evaluación.</p>'
-            : querySnapshot.docs.map(doc => {
-                const result = doc.data();
-                return `<div class="result-item"><span class="result-item-name">${result.nombreEstudiante}</span><span class="result-item-score">${result.calificacion} / ${result.totalPreguntas}</span></div>`;
+        
+        if (querySnapshot.empty) {
+            resultsList.innerHTML = '<p>Aún no hay resultados para esta evaluación.</p>';
+        } else {
+            // Poblar el caché
+            querySnapshot.forEach(doc => {
+                currentResultsData.push(doc.data());
+            });
+
+            // Renderizar la lista desde el caché
+            resultsList.innerHTML = currentResultsData.map(result => {
+                return `<div class="result-item">
+                            <span class="result-item-name">${result.nombreEstudiante}</span>
+                            <span class="result-item-score">${result.calificacion} / ${result.totalPreguntas}</span>
+                        </div>`;
             }).join('');
+        }
     } catch (error) {
         console.error("Error fetching results:", error);
         resultsList.innerHTML = '<p>Ocurrió un error al cargar los resultados.</p>';
@@ -557,6 +681,7 @@ const handleShowResults = async (roomId, roomTitle) => {
 // Analíticas y Gráficos (Sin cambios)
 // =============================================
 const handleShowAnalytics = async (roomId, roomTitle) => {
+    currentRoomId = roomId; // Seteamos el RoomId aquí también
     analyticsTitle.textContent = `Analíticas de "${roomTitle}"`;
     switchToView(analyticsView);
     
@@ -587,9 +712,26 @@ const handleShowAnalytics = async (roomId, roomTitle) => {
         const numQuestions = originalQuestions.length;
 
         if (resultsQuerySnap.empty) {
-             summaryCtx.innerHTML = '<p>Aún no hay resultados para esta evaluación.</p>';
-             performanceCtx.innerHTML = '<p>N/A</p>';
+             const summaryCtxCanvas = document.getElementById('summary-chart');
+             const performanceCtxCanvas = document.getElementById('question-performance-chart');
+
+             // Limpiar cualquier gráfico anterior y mostrar mensaje
+             const summaryParent = summaryCtxCanvas.parentElement;
+             const performanceParent = performanceCtxCanvas.parentElement;
+             
+             summaryParent.innerHTML = '<canvas id="summary-chart"></canvas><p style="text-align:center; padding: 2rem 0;">Aún no hay resultados para generar analíticas.</p>';
+             performanceParent.innerHTML = '<canvas id="question-performance-chart"></canvas><p style="text-align:center; padding: 2rem 0;">N/A</p>';
             return;
+        } else {
+             // Asegurarnos de que los canvas estén presentes si se recargan
+             const summaryParent = document.getElementById('summary-chart').parentElement;
+             if (!summaryParent.querySelector('canvas')) {
+                 summaryParent.innerHTML = '<canvas id="summary-chart"></canvas>';
+             }
+             const performanceParent = document.getElementById('question-performance-chart').parentElement;
+             if (!performanceParent.querySelector('canvas')) {
+                 performanceParent.innerHTML = '<canvas id="question-performance-chart"></canvas>';
+             }
         }
 
         let totalScoreSum = 0;
@@ -610,7 +752,7 @@ const handleShowAnalytics = async (roomId, roomTitle) => {
                 approvedCount++;
             }
             resultData.respuestas.forEach((studentAnswer, index) => {
-                if (index < numQuestions) { 
+                if (index < numQuestions && originalQuestions[index]) { // Verificación extra
                     if (studentAnswer === originalQuestions[index].correcta) {
                         questionStats[index].correct++;
                     } else {
@@ -864,6 +1006,12 @@ const initializePanel = (userData) => {
     // Listeners para el modal de confirmación
     cancelDeleteBtn.addEventListener('click', closeDeleteConfirmModal);
     confirmDeleteBtn.addEventListener('click', handleExecuteDelete);
+    
+    // =============================================
+    // ¡NUEVO! (Fase 21) Event Listener para CSV
+    // =============================================
+    exportCsvBtn.addEventListener('click', handleExportCSV);
+
     
     // Carga inicial de salas
     displayTeacherRooms(userData.uid);
