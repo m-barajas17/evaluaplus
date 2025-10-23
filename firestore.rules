@@ -5,7 +5,6 @@ service cloud.firestore {
 
     // --- FUNCIONES DE AYUDA GLOBALES ---
     // Estas funciones nos ayudan a no repetir código.
-
     // Función 1: Verifica si el usuario ha iniciado sesión.
     function isAuth() {
       return request.auth != null;
@@ -57,7 +56,6 @@ service cloud.firestore {
       // Permitimos la lectura si el usuario simplemente ha iniciado sesión.
       // Esto es necesario para que los estudiantes busquen salas por código.
       allow read: if isAuth();
-
       // 'allow write' se divide en 'create', 'update', 'delete'.
 
       // CREAR:
@@ -74,6 +72,33 @@ service cloud.firestore {
       allow update, delete: if isRole('docente') 
                             && resource.data.docenteId == request.auth.uid;
     }
+
+    // ================== NUEVAS REGLAS (FASE 22) ==================
+    // --- REGLAS PARA COLECCIÓN 'clases' ---
+    match /clases/{classId} {
+      // CREAR:
+      // Permitimos 'create' SI el usuario es un 'docente'.
+      allow create: if isRole('docente');
+
+      // LEER:
+      // Permitimos 'read' SI el usuario ha iniciado sesión
+      // (para que docentes vean las suyas y estudiantes puedan buscarlas).
+      allow read: if isAuth();
+
+      // ACTUALIZAR (Inscribir estudiante):
+      // Permitimos 'update' SI:
+      // 1. El usuario es un 'estudiante' (para inscribirse).
+      // 2. O SI el usuario es el 'docente' propietario (para gestionar su clase).
+      allow update: if isRole('estudiante') || 
+                      (isRole('docente') && resource.data.docenteId == request.auth.uid);
+
+      // BORRAR:
+      // Solo el docente propietario puede borrar su clase.
+      allow delete: if isRole('docente') 
+                      && resource.data.docenteId == request.auth.uid;
+    }
+    // ================== FIN NUEVAS REGLAS (FASE 22) ==================
+
     // --- REGLAS PARA COLECCIÓN 'resultados' ---
     match /resultados/{resultId} {
 
@@ -86,7 +111,6 @@ service cloud.firestore {
       // 'request.resource.data' es el documento como se verá DESPUÉS de la creación.
       allow create: if isRole('estudiante')
                     && request.resource.data.estudianteId == request.auth.uid;
-
       // LEER:
       // Permitimos 'read' (get y list) SI:
       // 1. El usuario es un 'docente' (para que pueda consultar por salaId).
@@ -95,10 +119,12 @@ service cloud.firestore {
       //
       // 'resource.data' es el documento que se está intentando leer.
       allow read: if isRole('docente') 
-                  || resource.data.estudianteId == request.auth.uid;
+                  ||
+                  resource.data.estudianteId == request.auth.uid;
       
       // ACTUALIZAR Y BORRAR:
-      // Prohibimos explícitamente a todos. Los resultados son finales.
+      // Prohibimos explícitamente a todos.
+      // Los resultados son finales.
       allow update, delete: if false;
     }
     // --- REGLAS PARA COLECCIÓN 'bancoPreguntas' ---
@@ -109,7 +135,6 @@ service cloud.firestore {
       // con su propio UID en el campo 'docenteId'.
       allow create: if isRole('docente')
                     && request.resource.data.docenteId == request.auth.uid;
-
       // LEER, ACTUALIZAR, BORRAR:
       // Un docente solo puede LEER, ACTUALIZAR o BORRAR una pregunta
       // si el 'docenteId' del documento coincide con su UID.

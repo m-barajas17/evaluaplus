@@ -26,6 +26,23 @@
     <main class="main-container">
 
         <div id="main-view">
+            
+            <section class="card">
+                <h2>Crear Nueva Clase</h2>
+                <form id="create-class-form">
+                    <div class="form-grid-2">
+                        <div class="input-group">
+                            <label for="class-title">Nombre de la Clase</label>
+                            <input type="text" id="class-title" name="class-title" placeholder="Ej: Álgebra 10A" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="class-subject">Materia</label>
+                            <input type="text" id="class-subject" name="class-subject" placeholder="Ej: Matemáticas" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="cta-button">Crear Clase</button>
+                </form>
+            </section>
             <section class="card">
                 <h2>Crear Nueva Sala de Evaluación</h2>
                 <form id="create-room-form">
@@ -48,6 +65,11 @@
                 </form>
             </section>
 
+            <section class="card">
+                <h2>Mis Clases</h2>
+                <div id="classes-list" class="rooms-grid"> <p>Aún no has creado ninguna clase.</p>
+                </div>
+            </section>
             <section class="card">
                 <h2>Mis Salas Creadas</h2>
                 <div id="rooms-list" class="rooms-grid">

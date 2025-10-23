@@ -96,7 +96,8 @@ body {
     margin-bottom: 0.5rem;
 }
 
-#join-room-form input {
+#join-room-form input,
+#join-class-form input {
     width: 100%;
     padding: 0.75rem 1rem;
     border-radius: 8px;
@@ -490,4 +491,32 @@ body {
 .student-short-answer:focus {
     outline: none;
     border-color: var(--color-secondary);
+}
+
+/* ================== NUEVOS ESTILOS (FASE 22) ================== */
+.class-card {
+    border: 1px solid var(--color-border);
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: #FBFCFF; /* Un fondo ligeramente diferente */
+    border-left: 5px solid var(--color-secondary);
+    margin-bottom: 1rem; /* Añade separación */
+}
+.class-card h3 { 
+    font-size: 1.2rem; 
+    margin-bottom: 0.5rem; 
+}
+.class-card p { 
+    color: var(--color-text-muted); 
+    margin-bottom: 1rem; 
+}
+.class-code {
+    background-color: #E0E7FF; /* Azul más claro */
+    color: var(--color-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 1.1rem;
+    text-align: center;
 }

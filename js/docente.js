@@ -25,8 +25,15 @@ const loadingSpinner = '<div class="loader-container"><div class="loader"></div>
 // --- DOM ELEMENT REFERENCES ---
 const userNameElement = document.getElementById('user-name');
 const logoutButton = document.getElementById('logout-button');
+
+// ================== NUEVAS REFERENCIAS (FASE 22) ==================
+const createClassForm = document.getElementById('create-class-form');
+const classesListContainer = document.getElementById('classes-list');
+// ================== FIN NUEVAS REFERENCIAS (FASE 22) ==================
+
 const createRoomForm = document.getElementById('create-room-form');
 const roomsListContainer = document.getElementById('rooms-list');
+
 
 // --- VIEW REFERENCES ---
 const mainView = document.getElementById('main-view');
@@ -869,6 +876,39 @@ const handleShowAnalytics = async (roomId, roomTitle) => {
 };
 
 
+// ================== NUEVA FUNCIÓN (FASE 22) ==================
+/**
+ * Muestra las clases creadas por el docente.
+ */
+const displayTeacherClasses = async (userId) => {
+    classesListContainer.innerHTML = loadingSpinner;
+    const q = query(collection(db, "clases"), where("docenteId", "==", userId));
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            classesListContainer.innerHTML = '<p>Aún no has creado ninguna clase.</p>';
+            return;
+        }
+        classesListContainer.innerHTML = '';
+        querySnapshot.forEach((doc) => {
+            const clase = doc.data();
+            const classCard = document.createElement('div');
+            classCard.className = 'class-card'; // Usamos el nuevo estilo CSS
+            classCard.innerHTML = `
+                <h3>${clase.nombreClase}</h3>
+                <p>Materia: ${clase.materia}</p>
+                <div class="class-code">Código de Inscripción: <span>${clase.codigoClase}</span></div>
+            `;
+            classesListContainer.appendChild(classCard);
+        });
+    } catch (error) {
+        console.error("Error fetching classes:", error);
+        classesListContainer.innerHTML = '<p>Ocurrió un error al cargar tus clases.</p>';
+    }
+};
+// ================== FIN NUEVA FUNCIÓN (FASE 22) ==================
+
+
 const displayTeacherRooms = async (userId) => {
     // (Sin cambios)
     roomsListContainer.innerHTML = loadingSpinner;
@@ -904,6 +944,45 @@ const displayTeacherRooms = async (userId) => {
         }).showToast();
     }
 };
+
+// ================== NUEVA FUNCIÓN (FASE 22) ==================
+/**
+ * Maneja la creación de una nueva clase.
+ */
+const handleCreateClass = async (e, userId) => {
+    e.preventDefault();
+    const title = createClassForm['class-title'].value;
+    const subject = createClassForm['class-subject'].value;
+    const classCode = generateAccessCode(); // Reutilizamos el generador de códigos
+
+    try {
+        // Nueva colección 'clases'
+        await addDoc(collection(db, "clases"), {
+            nombreClase: title,
+            materia: subject,
+            docenteId: userId,
+            codigoClase: classCode, // Código para que estudiantes se unan
+            estudiantesIds: [] // Array para los IDs de los estudiantes inscritos
+        });
+
+        Toastify({
+            text: `¡Clase "${title}" creada con éxito! Código: ${classCode}`,
+            duration: 5000, 
+            style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
+        }).showToast();
+
+        createClassForm.reset();
+        await displayTeacherClasses(userId); // Refresca la lista de clases
+    } catch (error) {
+        console.error("Error creating class:", error);
+         Toastify({
+            text: "Ocurrió un error al crear la clase.",
+            duration: 3000,
+            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" }
+        }).showToast();
+    }
+};
+// ================== FIN NUEVA FUNCIÓN (FASE 22) ==================
 
 const handleCreateRoom = async (e, userId) => {
     // (Sin cambios)
@@ -964,6 +1043,10 @@ const initializePanel = (userData) => {
         }
     });
 
+    // ================== NUEVOS LISTENERS (FASE 22) ==================
+    createClassForm.addEventListener('submit', (e) => handleCreateClass(e, userData.uid));
+    // ================== FIN NUEVOS LISTENERS (FASE 22) ==================
+    
     createRoomForm.addEventListener('submit', (e) => handleCreateRoom(e, userData.uid));
 
     roomsListContainer.addEventListener('click', (e) => {
@@ -1014,6 +1097,9 @@ const initializePanel = (userData) => {
 
     
     // Carga inicial de salas
+    // ================== NUEVAS LLAMADAS (FASE 22) ==================
+    displayTeacherClasses(userData.uid); // Llama a la nueva función
+    // ================== FIN NUEVAS LLAMADAS (FASE 22) ==================
     displayTeacherRooms(userData.uid);
 };
 

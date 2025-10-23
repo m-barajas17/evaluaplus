@@ -12,7 +12,9 @@ import {
     query,
     where,
     getDocs,
-    addDoc
+    addDoc,
+    updateDoc,  // <-- NUEVA IMPORTACIÓN (FASE 22)
+    arrayUnion  // <-- NUEVA IMPORTACIÓN (FASE 22)
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // =============================================
@@ -24,6 +26,12 @@ const loadingSpinner = '<div class="loader-container"><div class="loader"></div>
 // --- REFERENCIAS A ELEMENTOS DEL DOM ---
 const userNameElement = document.getElementById('user-name');
 const logoutButton = document.getElementById('logout-button');
+
+// ================== NUEVAS REFERENCIAS (FASE 22) ==================
+const joinClassForm = document.getElementById('join-class-form');
+const classesListContainer = document.getElementById('classes-list');
+// ================== FIN NUEVAS REFERENCIAS (FASE 22) ==================
+
 const joinRoomForm = document.getElementById('join-room-form');
 const joinRoomSection = document.getElementById('join-room-section');
 const evaluationSection = document.getElementById('evaluation-section');
@@ -221,6 +229,41 @@ const displayStudentHistory = async (studentId) => {
         }).showToast();
     }
 };
+
+// ================== NUEVA FUNCIÓN (FASE 22) ==================
+/**
+ * Muestra las clases en las que el estudiante está inscrito.
+ */
+const displayStudentClasses = async (studentId) => {
+    classesListContainer.innerHTML = loadingSpinner;
+    // Consulta donde el array 'estudiantesIds' contenga el ID del estudiante
+    const q = query(collection(db, "clases"), where("estudiantesIds", "array-contains", studentId));
+
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            classesListContainer.innerHTML = '<p>Aún no te has inscrito en ninguna clase.</p>';
+            return;
+        }
+        classesListContainer.innerHTML = ''; 
+
+        querySnapshot.forEach((doc) => {
+            const clase = doc.data();
+            const classCard = document.createElement('div');
+            classCard.className = 'class-card'; // Reutiliza el estilo
+            classCard.innerHTML = `
+                <h3>${clase.nombreClase}</h3>
+                <p>Materia: ${clase.materia}</p>
+            `;
+            classesListContainer.appendChild(classCard);
+        });
+    } catch (error) {
+        console.error("Error al obtener las clases del estudiante:", error);
+        classesListContainer.innerHTML = '<p>Ocurrió un error al cargar tus clases.</p>';
+    }
+};
+// ================== FIN NUEVA FUNCIÓN (FASE 22) ==================
+
 
 const handleFinishEvaluation = async () => {
     // ¡NUEVO! Detener el temporizador si existe
@@ -426,6 +469,57 @@ const startEvaluation = (roomData, roomId) => {
     displayQuestion();
 };
 
+// ================== NUEVA FUNCIÓN (FASE 22) ==================
+/**
+ * Maneja la inscripción de un estudiante a una clase.
+ */
+const handleJoinClass = async (e) => {
+    e.preventDefault();
+    const classCode = joinClassForm['class-code'].value.trim().toUpperCase();
+    if (!classCode) return;
+
+    const searchingToast = Toastify({
+        text: "Buscando clase...", duration: -1,
+        style: { background: "linear-gradient(135deg, #38BDF8, #3730A3)" }
+    }).showToast();
+
+    const q = query(collection(db, "clases"), where("codigoClase", "==", classCode));
+    try {
+        const querySnapshot = await getDocs(q);
+        searchingToast.hideToast();
+
+        if (querySnapshot.empty) {
+            Toastify({ text: "Código incorrecto. No se encontró ninguna clase.", duration: 3000, style: { background: "linear-gradient(to right, #f59e0b, #d97706)" } }).showToast();
+        } else {
+            const classDoc = querySnapshot.docs[0];
+            const classId = classDoc.id;
+            const classData = classDoc.data();
+
+            // Evitar inscripciones duplicadas
+            if (classData.estudiantesIds && classData.estudiantesIds.includes(studentData.uid)) {
+                Toastify({ text: `Ya estás inscrito en "${classData.nombreClase}".`, duration: 3000, style: { background: "linear-gradient(to right, #f59e0b, #d97706)" } }).showToast();
+                return;
+            }
+
+            // Añadir el ID del estudiante al array 'estudiantesIds' de la clase
+            const classDocRef = doc(db, "clases", classId);
+            await updateDoc(classDocRef, {
+                estudiantesIds: arrayUnion(studentData.uid)
+            });
+
+            Toastify({ text: `¡Inscrito en "${classData.nombreClase}" con éxito!`, duration: 2000, style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
+
+            joinClassForm.reset();
+            await displayStudentClasses(studentData.uid); // Refrescar la lista de clases
+        }
+    } catch (error) {
+        console.error("Error al unirse a la clase:", error);
+        searchingToast.hideToast();
+        Toastify({ text: "Ocurrió un error al intentar unirse a la clase.", duration: 3000, style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" } }).showToast();
+    }
+};
+// ================== FIN NUEVA FUNCIÓN (FASE 22) ==================
+
 const handleJoinRoom = async (e) => {
     e.preventDefault();
     const roomCode = joinRoomForm['room-code'].value.trim().toUpperCase();
@@ -508,6 +602,10 @@ const initializePanel = (userData) => {
         }
     });
 
+    // ================== NUEVO LISTENER (FASE 22) ==================
+    joinClassForm.addEventListener('submit', handleJoinClass);
+    // ================== FIN NUEVO LISTENER (FASE 22) ==================
+    
     joinRoomForm.addEventListener('submit', handleJoinRoom);
 
     // (Listener sin cambios)
@@ -544,6 +642,10 @@ const initializePanel = (userData) => {
         }
     });
 
+    // ================== NUEVA LLAMADA (FASE 22) ==================
+    displayStudentClasses(userData.uid);
+    // ================== FIN NUEVA LLAMADA (FASE 22) ==================
+    
     displayStudentHistory(userData.uid);
 };
 

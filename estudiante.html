@@ -28,6 +28,18 @@
     </header>
 
     <main class="main-container">
+        
+        <section class="card" id="join-class-section">
+            <h2>Inscribirse en una Clase</h2>
+            <p>Ingresa el código proporcionado por tu docente para inscribirte en una clase.</p>
+            <form id="join-class-form">
+                <div class="input-group">
+                    <label for="class-code">Código de la Clase</label>
+                    <input type="text" id="class-code" name="class-code" placeholder="Código de Clase" required maxlength="6">
+                </div>
+                <button type="submit" class="cta-button">Inscribirme en la Clase</button>
+            </form>
+        </section>
         <section class="card" id="join-room-section">
             <h2>Unirse a una Sala de Evaluación</h2>
             <p>Ingresa el código de 6 caracteres proporcionado por tu docente para comenzar.</p>
@@ -46,7 +58,13 @@
                 <p>Aún no te has unido a ninguna sala.</p>
             </div>
         </section>
-
+        
+        <section class="card">
+            <h2>Mis Clases</h2>
+            <div id="classes-list">
+                <p>Cargando mis clases...</p>
+            </div>
+        </section>
         <section class="card">
             <h2>Mi Historial de Evaluaciones</h2>
             <div id="history-list">
