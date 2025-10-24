@@ -96,6 +96,7 @@ body {
     margin-bottom: 0.5rem;
 }
 
+/* (FASE 18 Fix) Hacer específico este selector para no afectar otros inputs */
 #join-room-form input,
 #join-class-form input {
     width: 100%;
@@ -255,30 +256,6 @@ body {
     border: 1px solid var(--color-border);
     border-radius: 8px;
     margin-bottom: 1rem;
-}
-
-.history-item-title {
-    font-weight: 600;
-}
-
-.history-item-score {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--color-secondary);
-    background-color: #EEF2FF;
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-}
-
-/* --- ¡NUEVOS ESTILOS PARA EL HISTORIAL! --- */
-.history-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    margin-bottom: 1rem;
     /* --- MODIFICACIÓN --- */
     cursor: pointer; /* Hacemos que parezca un botón */
     transition: all var(--transition-speed);
@@ -426,9 +403,6 @@ body {
 /* ¡NUEVO! (Paso 4.A) Estilos para Indicador de Carga (Spinner) */
 /* ============================================= */
 
-/* Este es un spinner de carga simple hecho con CSS puro.
-  Usará los colores de nuestra paleta (var(--color-border) y var(--color-secondary)).
-*/
 .loader {
     width: 48px;
     height: 48px;
@@ -450,9 +424,6 @@ body {
     }
 }
 
-/* Usaremos este contenedor para centrar el spinner 
-  dentro de #history-list y #review-content-container.
-*/
 .loader-container {
     display: flex;
     justify-content: center;
@@ -460,6 +431,7 @@ body {
     width: 100%;
     padding: 2rem 0;
 }
+
 /* (Al final de css/estudiante.css) */
 .timer-container {
     background-color: #FFFBEB; /* Amarillo pálido */
@@ -478,6 +450,7 @@ body {
     color: #991B1B; /* Rojo oscuro */
     border-color: #FECACA;
 }
+
 /* (Al final de css/estudiante.css) */
 .student-short-answer {
     width: 100%;
@@ -502,13 +475,13 @@ body {
     border-left: 5px solid var(--color-secondary);
     margin-bottom: 1rem; /* Añade separación */
 }
-.class-card h3 { 
-    font-size: 1.2rem; 
-    margin-bottom: 0.5rem; 
+.class-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
 }
-.class-card p { 
-    color: var(--color-text-muted); 
-    margin-bottom: 1rem; 
+.class-card p {
+    color: var(--color-text-muted);
+    margin-bottom: 1rem;
 }
 .class-code {
     background-color: #E0E7FF; /* Azul más claro */
@@ -519,4 +492,30 @@ body {
     font-family: monospace;
     font-size: 1.1rem;
     text-align: center;
+}
+
+/* ================== NUEVOS ESTILOS (FASE 23) ================== */
+.evaluation-card {
+    border: 1px solid var(--color-border);
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: #FBFCFF; /* Un fondo ligeramente diferente */
+    border-left: 5px solid var(--color-secondary);
+    margin-bottom: 1rem; /* Añade separación */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+.evaluation-card-info h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+}
+.evaluation-card-info p {
+    color: var(--color-text-muted);
+    margin: 0; /* Resetear margen del párrafo dentro de la tarjeta */
+}
+.evaluation-card .cta-button {
+    width: auto; /* El botón no ocupa todo el ancho */
+    flex-shrink: 0; /* Evita que el botón se encoja */
 }

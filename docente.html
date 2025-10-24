@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-R">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel del Docente | Evalúa+</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,6 +55,14 @@
                             <label for="subject">Materia</label>
                             <input type="text" id="subject" name="subject" placeholder="Ej: Matemáticas" required>
                         </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="assign-to-classes">Asignar a Clases (Opcional)</label>
+                        <select id="assign-to-classes" name="assign-to-classes" multiple>
+                            <option value="" disabled>Cargando clases...</option>
+                        </select>
+                        <small>Mantén presionado Ctrl (o Cmd) para seleccionar varias. Si no seleccionas ninguna, la sala solo será accesible por código.</small>
                     </div>
                     <div class="input-group">
                         <label for="time-limit">Límite de Tiempo (en minutos)</label>

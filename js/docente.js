@@ -45,6 +45,10 @@ const questionsTitle = document.getElementById('questions-title');
 const questionsListContainer = document.getElementById('questions-list-container');
 const addNewQuestionBtn = document.getElementById('add-new-question-btn');
 const addFromBankBtn = document.getElementById('add-from-bank-btn');
+// ================== NUEVA REFERENCIA (FASE 23) ==================
+const assignToClassesSelect = document.getElementById('assign-to-classes');
+// ================== FIN NUEVA REFERENCIA (FASE 23) ==================
+
 // =============================================
 // ¡NUEVO! (Fase 21) Referencia al botón CSV
 // =============================================
@@ -98,7 +102,7 @@ const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
 let currentRoomId = null;
 let currentUserId = null;
 let editingQuestionIndex = null;
-let bankQuestionsCache = []; 
+let bankQuestionsCache = [];
 // =============================================
 // ¡NUEVO! (Fase 21) Caché para los resultados
 // =============================================
@@ -135,10 +139,8 @@ const generateAccessCode = () => {
 // =============================================
 /**
  * Muestra/oculta y habilita/deshabilita los campos del modal según el tipo de pregunta.
- * @param {string} type - 'multipleChoice' o 'trueFalse'
+ * @param {string} type - 'multipleChoice', 'trueFalse' o 'shortAnswer'
  */
-// (Reemplaza la función completa, aprox. línea 120)
-
 const setQuestionModalUI = (type) => {
     // Ocultar y deshabilitar todo primero
     optionsMultipleChoice.style.display = 'none';
@@ -182,20 +184,16 @@ const setQuestionModalUI = (type) => {
 };
 // --- ADD/EDIT QUESTION MODAL MANAGEMENT ---
 const openAddQuestionModal = () => {
-    // =============================================
-    // ¡MODIFICADO! (Fase 17-Corrección) 
-    // =============================================
+    // (Sin cambios desde Fase 17)
     editingQuestionIndex = null;
     modalTitle.textContent = 'Añadir Nueva Pregunta';
     saveQuestionBtn.textContent = 'Guardar Pregunta';
     saveToBankCheckbox.parentElement.style.display = 'flex';
     addQuestionForm.reset();
 
-    // ¡NUEVO! Resetear la UI del selector de tipo
     questionTypeSelect.value = 'multipleChoice';
-    setQuestionModalUI('multipleChoice'); // <-- Usamos la nueva función
+    setQuestionModalUI('multipleChoice');
     
-    // Asegurar que los radios de MC estén reseteados
     addQuestionForm.querySelector('input[name="correct-answer"][value="A"]').checked = true;
     addQuestionForm.querySelector('input[name="correct-answer-tf"][value="A"]').checked = true;
 
@@ -203,42 +201,33 @@ const openAddQuestionModal = () => {
 };
 
 const openEditQuestionModal = (question, index) => {
-    // =============================================
-    // ¡MODIFICADO! (Fase 17-Corrección) 
-    // =============================================
+    // (Sin cambios desde Fase 18)
     editingQuestionIndex = index;
     modalTitle.textContent = 'Editar Pregunta';
     saveQuestionBtn.textContent = 'Guardar Cambios';
     saveToBankCheckbox.parentElement.style.display = 'none';
-    addQuestionForm.reset(); // Resetea primero
+    addQuestionForm.reset();
 
-    const questionType = question.tipo || 'multipleChoice'; 
+    const questionType = question.tipo || 'multipleChoice';
     questionTypeSelect.value = questionType;
 
     addQuestionForm.querySelector('#question-text').value = question.pregunta;
     addQuestionForm.querySelector('#feedback-correct').value = question.feedbackCorrecto || '';
     addQuestionForm.querySelector('#feedback-incorrect').value = question.feedbackIncorrecto || '';
 
-    setQuestionModalUI(questionType); // <-- Usamos la nueva función
+    setQuestionModalUI(questionType);
 
     if (questionType === 'multipleChoice') {
-        // Poblar campos de Opción Múltiple
         addQuestionForm.querySelector('#option-a').value = question.opciones.A;
         addQuestionForm.querySelector('#option-b').value = question.opciones.B;
         addQuestionForm.querySelector('#option-c').value = question.opciones.C;
         addQuestionForm.querySelector('#option-d').value = question.opciones.D;
         addQuestionForm.querySelector(`input[name="correct-answer"][value="${question.correcta}"]`).checked = true;
-
-        } else if (questionType === 'trueFalse') {
-        // Solo necesitamos marcar la respuesta correcta
+    } else if (questionType === 'trueFalse') {
         addQuestionForm.querySelector(`input[name="correct-answer-tf"][value="${question.correcta}"]`).checked = true;
-    
-    // --- AÑADE ESTE BLOQUE ---
-        } else if (questionType === 'shortAnswer') {
-        // Solo necesitamos poblar la respuesta correcta
+    } else if (questionType === 'shortAnswer') {
         inputCorrectAnswerSA.value = question.correcta;
     }
-    // -------------------------
 
     addQuestionModal.style.display = 'flex';
 };
@@ -275,7 +264,7 @@ const openBankModal = async () => {
         Toastify({
             text: "Error al cargar tu banco de preguntas.",
             duration: 3000,
-            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" } 
+            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" }
         }).showToast();
     }
 };
@@ -287,8 +276,8 @@ const closeBankModal = () => {
 
 const renderBankQuestions = (filter) => {
     // (Lógica sin cambios)
-    const filteredQuestions = filter === 'all' 
-        ? bankQuestionsCache 
+    const filteredQuestions = filter === 'all'
+        ? bankQuestionsCache
         : bankQuestionsCache.filter(q => q.materia === filter);
 
     if (filteredQuestions.length === 0) {
@@ -306,7 +295,7 @@ const renderBankQuestions = (filter) => {
 
 // --- QUESTION CRUD LOGIC ---
 const handleQuestionSubmit = async (e) => {
-    // (Sin cambios - nuestra lógica de lectura ya era correcta)
+    // (Sin cambios desde Fase 18)
     e.preventDefault();
     if (!currentRoomId || !currentUserId) return;
 
@@ -336,11 +325,9 @@ const handleQuestionSubmit = async (e) => {
             B: "Falso"
         };
         newQuestionData.correcta = addQuestionForm.querySelector('input[name="correct-answer-tf"]:checked').value;
-    
-    // --- AÑADE ESTE BLOQUE ---
     } else if (questionType === 'shortAnswer') {
-        newQuestionData.opciones = null; // No hay opciones
-        newQuestionData.correcta = inputCorrectAnswerSA.value.trim(); // Guarda el texto exacto
+        newQuestionData.opciones = null;
+        newQuestionData.correcta = inputCorrectAnswerSA.value.trim();
     }
 
     try {
@@ -348,7 +335,7 @@ const handleQuestionSubmit = async (e) => {
             await addDoc(collection(db, "bancoPreguntas"), {
                 ...newQuestionData,
                 docenteId: currentUserId,
-                materia: roomData.materia 
+                materia: roomData.materia
             });
             Toastify({
                 text: "Pregunta guardada en tu banco.",
@@ -428,8 +415,8 @@ const handleExecuteDelete = async () => {
             style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
         }).showToast();
 
-        closeDeleteConfirmModal(); 
-        await displayQuestionsForRoom(roomId); 
+        closeDeleteConfirmModal();
+        await displayQuestionsForRoom(roomId);
 
     } catch (error) {
         console.error("Error deleting question:", error);
@@ -438,7 +425,7 @@ const handleExecuteDelete = async () => {
             duration: 3000,
             style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" }
         }).showToast();
-        closeDeleteConfirmModal(); 
+        closeDeleteConfirmModal();
     }
 };
 
@@ -488,80 +475,62 @@ const handleAddFromBank = async () => {
 // =============================================
 // ¡NUEVO! (Fase 21) Funciones de Exportación CSV
 // =============================================
-/**
- * Convierte un array de objetos de resultado en un string CSV.
- * @param {Array<Object>} data - El array de `currentResultsData`.
- * @returns {string} - El contenido del archivo CSV como un string.
- */
 const generateCSV = (data) => {
-    // Define las columnas que queremos en el CSV
+    // (Sin cambios)
     const headers = ["Nombre Estudiante", "Calificacion", "Total Preguntas"];
-    let csvRows = [headers.join(',')]; // Fila de encabezado
+    let csvRows = [headers.join(',')];
 
-    // Itera sobre cada resultado y extrae los valores
     data.forEach(result => {
         const values = [
-            `"${result.nombreEstudiante}"`, // Usar comillas por si hay comas en el nombre
+            `"${result.nombreEstudiante}"`,
             result.calificacion,
             result.totalPreguntas
         ];
         csvRows.push(values.join(','));
     });
 
-    return csvRows.join('\n'); // Une todas las filas con saltos de línea
+    return csvRows.join('\n');
 };
 
-/**
- * Dispara la descarga del navegador para un archivo CSV.
- * @param {string} csvContent - El string CSV generado por `generateCSV`.
- * @param {string} fileName - El nombre del archivo (ej: "mi_evaluacion.csv").
- */
 const downloadCSV = (csvContent, fileName) => {
-    // Crea un objeto Blob con el contenido y el tipo MIME correcto
+    // (Sin cambios)
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
 
-    if (link.download !== undefined) { // Detección de feature
-        // Crea una URL para el Blob
+    if (link.download !== undefined) {
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
         link.setAttribute("download", fileName);
         link.style.visibility = 'hidden';
         
-        // Añade el link al DOM, simula el clic y lo remueve
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     }
 };
 
-/**
- * Orquesta la exportación a CSV usando los datos cacheados.
- */
 const handleExportCSV = async () => {
+    // (Sin cambios)
     if (currentResultsData.length === 0) {
-        Toastify({ 
+        Toastify({
             text: "No hay resultados para exportar.",
             duration: 3000,
-            style: { background: "linear-gradient(to right, #f59e0b, #d97706)" } // Naranja aviso
+            style: { background: "linear-gradient(to right, #f59e0b, #d97706)" }
         }).showToast();
         return;
     }
 
-    // 1. Obtener nombre de la sala para el archivo
-    let roomTitle = "resultados_evaluaplus"; // Título por defecto
+    let roomTitle = "resultados_evaluaplus";
     try {
         const roomDocRef = doc(db, "salas", currentRoomId);
         const roomDocSnap = await getDoc(roomDocRef);
         if (roomDocSnap.exists()) {
-            // Reemplaza espacios y caracteres no válidos para nombres de archivo
             roomTitle = roomDocSnap.data().titulo.replace(/[^a-z0-9]/gi, '_').toLowerCase();
         }
     } catch (e) {
         console.error("Error al obtener nombre de sala para CSV:", e);
     }
 
-    // 2. Generar y Descargar
     try {
         const csvContent = generateCSV(currentResultsData);
         downloadCSV(csvContent, `${roomTitle}_resultados.csv`);
@@ -569,14 +538,14 @@ const handleExportCSV = async () => {
         Toastify({
             text: "¡Exportación completada!",
             duration: 3000,
-            style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } // Verde éxito
+            style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
         }).showToast();
     } catch (error) {
         console.error("Error al generar/descargar CSV:", error);
         Toastify({
             text: "Ocurrió un error al generar el archivo.",
             duration: 3000,
-            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" } // Rojo error
+            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" }
         }).showToast();
     }
 };
@@ -591,7 +560,7 @@ const switchToView = (viewToShow) => {
 
 const displayQuestionsForRoom = async (roomId) => {
     // (Sin cambios)
-    currentRoomId = roomId; 
+    currentRoomId = roomId;
     questionsListContainer.innerHTML = loadingSpinner;
     
     const roomDocRef = doc(db, "salas", roomId);
@@ -608,7 +577,7 @@ const displayQuestionsForRoom = async (roomId) => {
         
         const roomData = roomDocSnap.data();
         questionsTitle.textContent = `Gestionando: "${roomData.titulo}"`;
-        questionsListContainer.innerHTML = ''; 
+        questionsListContainer.innerHTML = '';
 
         if (roomData.preguntas && roomData.preguntas.length > 0) {
             roomData.preguntas.forEach((question, index) => {
@@ -622,7 +591,7 @@ const displayQuestionsForRoom = async (roomId) => {
                     </div>
                 `;
                 questionItem.querySelector('.edit-btn').addEventListener('click', () => openEditQuestionModal(question, index));
-                questionItem.querySelector('.delete-btn').addEventListener('click', () => openDeleteConfirmModal(index, roomId)); 
+                questionItem.querySelector('.delete-btn').addEventListener('click', () => openDeleteConfirmModal(index, roomId));
                 questionsListContainer.appendChild(questionItem);
             });
         } else {
@@ -641,14 +610,12 @@ const displayQuestionsForRoom = async (roomId) => {
     }
 };
 
-// =============================================
-// ¡MODIFICADO! (Fase 21) para usar el caché
-// =============================================
 const handleShowResults = async (roomId, roomTitle) => {
-    currentRoomId = roomId; // ¡Importante! Setear el ID de la sala actual
+    // (Sin cambios desde Fase 21)
+    currentRoomId = roomId;
     resultsTitle.textContent = `Resultados de "${roomTitle}"`;
     resultsList.innerHTML = loadingSpinner;
-    currentResultsData = []; // Limpiar el caché de resultados anterior
+    currentResultsData = [];
     
     const q = query(collection(db, "resultados"), where("salaId", "==", roomId));
 
@@ -658,12 +625,10 @@ const handleShowResults = async (roomId, roomTitle) => {
         if (querySnapshot.empty) {
             resultsList.innerHTML = '<p>Aún no hay resultados para esta evaluación.</p>';
         } else {
-            // Poblar el caché
             querySnapshot.forEach(doc => {
                 currentResultsData.push(doc.data());
             });
 
-            // Renderizar la lista desde el caché
             resultsList.innerHTML = currentResultsData.map(result => {
                 return `<div class="result-item">
                             <span class="result-item-name">${result.nombreEstudiante}</span>
@@ -684,11 +649,9 @@ const handleShowResults = async (roomId, roomTitle) => {
 };
 
 
-// =============================================
-// Analíticas y Gráficos (Sin cambios)
-// =============================================
 const handleShowAnalytics = async (roomId, roomTitle) => {
-    currentRoomId = roomId; // Seteamos el RoomId aquí también
+    // (Sin cambios desde Fase 15)
+    currentRoomId = roomId;
     analyticsTitle.textContent = `Analíticas de "${roomTitle}"`;
     switchToView(analyticsView);
     
@@ -722,7 +685,6 @@ const handleShowAnalytics = async (roomId, roomTitle) => {
              const summaryCtxCanvas = document.getElementById('summary-chart');
              const performanceCtxCanvas = document.getElementById('question-performance-chart');
 
-             // Limpiar cualquier gráfico anterior y mostrar mensaje
              const summaryParent = summaryCtxCanvas.parentElement;
              const performanceParent = performanceCtxCanvas.parentElement;
              
@@ -730,7 +692,6 @@ const handleShowAnalytics = async (roomId, roomTitle) => {
              performanceParent.innerHTML = '<canvas id="question-performance-chart"></canvas><p style="text-align:center; padding: 2rem 0;">N/A</p>';
             return;
         } else {
-             // Asegurarnos de que los canvas estén presentes si se recargan
              const summaryParent = document.getElementById('summary-chart').parentElement;
              if (!summaryParent.querySelector('canvas')) {
                  summaryParent.innerHTML = '<canvas id="summary-chart"></canvas>';
@@ -743,7 +704,7 @@ const handleShowAnalytics = async (roomId, roomTitle) => {
 
         let totalScoreSum = 0;
         let approvedCount = 0;
-        const approvalThreshold = 0.6; 
+        const approvalThreshold = 0.6;
         const numSubmissions = resultsQuerySnap.size;
 
         let questionStats = originalQuestions.map(q => ({
@@ -759,7 +720,7 @@ const handleShowAnalytics = async (roomId, roomTitle) => {
                 approvedCount++;
             }
             resultData.respuestas.forEach((studentAnswer, index) => {
-                if (index < numQuestions && originalQuestions[index]) { // Verificación extra
+                if (index < numQuestions && originalQuestions[index]) {
                     if (studentAnswer === originalQuestions[index].correcta) {
                         questionStats[index].correct++;
                     } else {
@@ -768,12 +729,6 @@ const handleShowAnalytics = async (roomId, roomTitle) => {
                 }
             });
         });
-
-        const averageScore = totalScoreSum / numSubmissions;
-        const averagePercentage = (averageScore / numQuestions) * 100;
-        const approvalRate = (approvedCount / numSubmissions) * 100;
-        const difficultQuestions = [...questionStats].sort((a, b) => b.incorrect - a.incorrect).slice(0, 3);
-        const easyQuestions = [...questionStats].sort((a, b) => b.correct - a.correct).slice(0, 3);
 
         const summaryCtx2 = document.getElementById('summary-chart').getContext('2d');
         const reprobadosCount = numSubmissions - approvedCount;
@@ -817,33 +772,33 @@ const handleShowAnalytics = async (roomId, roomTitle) => {
         const performanceCtx2 = document.getElementById('question-performance-chart').getContext('2d');
         
         performanceChartInstance = new Chart(performanceCtx2, {
-            type: 'bar', 
+            type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
                     {
                         label: 'Aciertos',
                         data: aciertosData,
-                        backgroundColor: 'rgba(74, 222, 128, 0.7)', 
+                        backgroundColor: 'rgba(74, 222, 128, 0.7)',
                         borderColor: 'rgba(74, 222, 128, 1)',
                         borderWidth: 1
                     },
                     {
                         label: 'Fallos',
                         data: fallosData,
-                        backgroundColor: 'rgba(248, 113, 113, 0.7)', 
+                        backgroundColor: 'rgba(248, 113, 113, 0.7)',
                         borderColor: 'rgba(248, 113, 113, 1)',
                         borderWidth: 1
                     }
                 ]
             },
             options: {
-                indexAxis: 'y', 
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
                     x: {
-                        stacked: true, 
+                        stacked: true,
                         title: { display: true, text: 'Número de Respuestas' }
                     },
                     y: { stacked: true }
@@ -876,37 +831,63 @@ const handleShowAnalytics = async (roomId, roomTitle) => {
 };
 
 
-// ================== NUEVA FUNCIÓN (FASE 22) ==================
+// ================== MODIFICADO (FASE 23) ==================
 /**
- * Muestra las clases creadas por el docente.
+ * Muestra las clases creadas por el docente y las añade al selector de asignación.
  */
 const displayTeacherClasses = async (userId) => {
     classesListContainer.innerHTML = loadingSpinner;
+    // (FASE 23) Limpiar también el dropdown de asignación al iniciar la carga
+    assignToClassesSelect.innerHTML = '<option value="" disabled>Cargando clases...</option>';
+
     const q = query(collection(db, "clases"), where("docenteId", "==", userId));
     try {
         const querySnapshot = await getDocs(q);
+        
+        // (FASE 23) Limpiar el contenedor de tarjetas y el dropdown antes de llenarlos
+        classesListContainer.innerHTML = ''; 
+        assignToClassesSelect.innerHTML = ''; // Limpiamos el "Cargando..."
+
         if (querySnapshot.empty) {
             classesListContainer.innerHTML = '<p>Aún no has creado ninguna clase.</p>';
+            // (FASE 23) Actualizar el dropdown si no hay clases
+            assignToClassesSelect.innerHTML = '<option value="" disabled>No has creado clases para asignar</option>';
             return;
         }
-        classesListContainer.innerHTML = '';
+
         querySnapshot.forEach((doc) => {
             const clase = doc.data();
+            // Crear tarjeta de clase (sin cambios)
             const classCard = document.createElement('div');
-            classCard.className = 'class-card'; // Usamos el nuevo estilo CSS
+            classCard.className = 'class-card';
             classCard.innerHTML = `
                 <h3>${clase.nombreClase}</h3>
                 <p>Materia: ${clase.materia}</p>
                 <div class="class-code">Código de Inscripción: <span>${clase.codigoClase}</span></div>
             `;
             classesListContainer.appendChild(classCard);
+
+            // ================== NUEVO BLOQUE (FASE 23) ==================
+            // Añadir al dropdown de asignación en el formulario de creación de sala
+            const classOption = document.createElement('option');
+            classOption.value = doc.id; // Guardamos el ID del documento de la clase
+            classOption.textContent = clase.nombreClase;
+            assignToClassesSelect.appendChild(classOption);
+            // ================== FIN NUEVO BLOQUE (FASE 23) ==================
         });
     } catch (error) {
         console.error("Error fetching classes:", error);
         classesListContainer.innerHTML = '<p>Ocurrió un error al cargar tus clases.</p>';
+        // (FASE 23) Mostrar error también en el dropdown
+        assignToClassesSelect.innerHTML = '<option value="" disabled>Error al cargar clases</option>';
+         Toastify({ // (FASE 23) Añadir Toast de error
+            text: "Error al cargar tus clases.",
+            duration: 3000,
+            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" }
+        }).showToast();
     }
 };
-// ================== FIN NUEVA FUNCIÓN (FASE 22) ==================
+// ================== FIN MODIFICADO (FASE 23) ==================
 
 
 const displayTeacherRooms = async (userId) => {
@@ -945,34 +926,30 @@ const displayTeacherRooms = async (userId) => {
     }
 };
 
-// ================== NUEVA FUNCIÓN (FASE 22) ==================
-/**
- * Maneja la creación de una nueva clase.
- */
 const handleCreateClass = async (e, userId) => {
+    // (Sin cambios desde Fase 22)
     e.preventDefault();
     const title = createClassForm['class-title'].value;
     const subject = createClassForm['class-subject'].value;
-    const classCode = generateAccessCode(); // Reutilizamos el generador de códigos
+    const classCode = generateAccessCode();
 
     try {
-        // Nueva colección 'clases'
         await addDoc(collection(db, "clases"), {
             nombreClase: title,
             materia: subject,
             docenteId: userId,
-            codigoClase: classCode, // Código para que estudiantes se unan
-            estudiantesIds: [] // Array para los IDs de los estudiantes inscritos
+            codigoClase: classCode,
+            estudiantesIds: []
         });
 
         Toastify({
             text: `¡Clase "${title}" creada con éxito! Código: ${classCode}`,
-            duration: 5000, 
+            duration: 5000,
             style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
         }).showToast();
 
         createClassForm.reset();
-        await displayTeacherClasses(userId); // Refresca la lista de clases
+        await displayTeacherClasses(userId);
     } catch (error) {
         console.error("Error creating class:", error);
          Toastify({
@@ -982,10 +959,12 @@ const handleCreateClass = async (e, userId) => {
         }).showToast();
     }
 };
-// ================== FIN NUEVA FUNCIÓN (FASE 22) ==================
 
+// ================== MODIFICADO (FASE 23) ==================
+/**
+ * Maneja la creación de una nueva sala de evaluación, incluyendo la asignación a clases.
+ */
 const handleCreateRoom = async (e, userId) => {
-    // (Sin cambios)
     e.preventDefault();
     const title = createRoomForm['title'].value;
     const subject = createRoomForm['subject'].value;
@@ -995,6 +974,11 @@ const handleCreateRoom = async (e, userId) => {
     
     const accessCode = generateAccessCode();
 
+    // ================== NUEVO BLOQUE (FASE 23) ==================
+    // Obtener los IDs de las clases seleccionadas del <select multiple>
+    const selectedClassIds = Array.from(assignToClassesSelect.selectedOptions).map(option => option.value);
+    // ================== FIN NUEVO BLOQUE (FASE 23) ==================
+
     try {
         await addDoc(collection(db, "salas"), {
             titulo: title,
@@ -1002,17 +986,20 @@ const handleCreateRoom = async (e, userId) => {
             docenteId: userId,
             codigoAcceso: accessCode,
             preguntas: [],
-            limiteTiempo: timeLimit 
+            limiteTiempo: timeLimit,
+            clasesAsignadas: selectedClassIds // (FASE 23) Guardar el array de IDs de clases
         });
         
         Toastify({
             text: `¡Sala "${title}" creada con éxito! Código: ${accessCode}`,
-            duration: 5000, 
+            duration: 5000,
             style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
         }).showToast();
 
         createRoomForm.reset();
-        await displayTeacherRooms(userId);
+        // (FASE 23) Deseleccionar todas las opciones en el <select multiple>
+        assignToClassesSelect.selectedIndex = -1; 
+        await displayTeacherRooms(userId); // Refrescar la lista de salas
     } catch (error) {
         console.error("Error creating room:", error);
          Toastify({
@@ -1022,35 +1009,32 @@ const handleCreateRoom = async (e, userId) => {
         }).showToast();
     }
 };
+// ================== FIN MODIFICADO (FASE 23) ==================
 
 // --- PANEL INITIALIZATION ---
 const initializePanel = (userData) => {
+    // (Sin cambios, solo las llamadas al final)
     userNameElement.textContent = `Bienvenido, ${userData.nombre}`;
     currentUserId = userData.uid;
 
     logoutButton.addEventListener('click', async () => {
-        // (Sin cambios)
         try {
             await signOut(auth);
             window.location.href = 'login.html';
-        } catch (error) { 
-            console.error("Error signing out:", error); 
+        } catch (error) {
+            console.error("Error signing out:", error);
              Toastify({
                 text: "Error al cerrar sesión.",
                 duration: 3000,
-                style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" } 
+                style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" }
             }).showToast();
         }
     });
 
-    // ================== NUEVOS LISTENERS (FASE 22) ==================
     createClassForm.addEventListener('submit', (e) => handleCreateClass(e, userData.uid));
-    // ================== FIN NUEVOS LISTENERS (FASE 22) ==================
-    
     createRoomForm.addEventListener('submit', (e) => handleCreateRoom(e, userData.uid));
 
     roomsListContainer.addEventListener('click', (e) => {
-        // (Sin cambios)
         const target = e.target;
         if (target.classList.contains('manage-button')) {
             displayQuestionsForRoom(target.dataset.roomId);
@@ -1064,42 +1048,30 @@ const initializePanel = (userData) => {
     });
 
     document.querySelectorAll('.back-to-main').forEach(btn => {
-        // (Sin cambios)
         btn.addEventListener('click', () => switchToView(mainView));
     });
 
-    // Listeners para el modal de añadir/editar pregunta
     addNewQuestionBtn.addEventListener('click', openAddQuestionModal);
     addQuestionForm.addEventListener('submit', handleQuestionSubmit);
     cancelQuestionBtn.addEventListener('click', closeAddQuestionModal);
     
-    // =============================================
-    // ¡MODIFICADO! (Fase 17-Corrección)
-    // =============================================
     questionTypeSelect.addEventListener('change', (e) => {
-        setQuestionModalUI(e.target.value); // <-- Usamos la nueva función
+        setQuestionModalUI(e.target.value);
     });
 
-    // Listeners para el modal del banco de preguntas
     addFromBankBtn.addEventListener('click', openBankModal);
     cancelBankBtn.addEventListener('click', closeBankModal);
     subjectFilter.addEventListener('change', (e) => renderBankQuestions(e.target.value));
     addSelectedQuestionsBtn.addEventListener('click', handleAddFromBank);
 
-    // Listeners para el modal de confirmación
     cancelDeleteBtn.addEventListener('click', closeDeleteConfirmModal);
     confirmDeleteBtn.addEventListener('click', handleExecuteDelete);
     
-    // =============================================
-    // ¡NUEVO! (Fase 21) Event Listener para CSV
-    // =============================================
     exportCsvBtn.addEventListener('click', handleExportCSV);
 
     
-    // Carga inicial de salas
-    // ================== NUEVAS LLAMADAS (FASE 22) ==================
-    displayTeacherClasses(userData.uid); // Llama a la nueva función
-    // ================== FIN NUEVAS LLAMADAS (FASE 22) ==================
+    // Carga inicial
+    displayTeacherClasses(userData.uid); // Ahora también poblará el dropdown
     displayTeacherRooms(userData.uid);
 };
 
@@ -1115,7 +1087,7 @@ onAuthStateChanged(auth, async (user) => {
                 if (userData.rol === 'docente') {
                     initializePanel(userData);
                 } else {
-                    alert("Acceso no autorizado."); 
+                    alert("Acceso no autorizado.");
                     window.location.href = 'index.html';
                 }
             } else { window.location.href = 'login.html'; }

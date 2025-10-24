@@ -774,3 +774,20 @@ body {
     font-size: 1.1rem;
     text-align: center;
 }
+
+/* ================== NUEVOS ESTILOS (FASE 23) ================== */
+.input-group select[multiple] {
+    height: 120px; /* Darle altura para que se vea como una lista */
+    background-color: var(--color-surface);
+    padding: 0.5rem; /* Ajuste de padding para select multiple */
+}
+
+.input-group select[multiple] option {
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.input-group select[multiple] option:checked {
+    background: var(--color-secondary);
+    color: var(--color-surface);
+}
