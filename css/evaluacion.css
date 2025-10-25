@@ -13,6 +13,7 @@
     --font-family: 'Poppins', sans-serif;
     --border-radius: 16px;
     --transition-speed: 0.3s;
+    --color-secondary-bg: #EEF2FF;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -176,7 +177,7 @@ body {
 
 .option:hover,
 .option:has(input:checked) {
-    background-color: #EEF2FF;
+    background-color: var(--color-secondary-bg);
     border-color: var(--color-secondary);
 }
 
@@ -270,4 +271,22 @@ body {
 .score-display .total {
     font-size: 1.2rem;
     opacity: 0.8;
+}
+
+/* --- TEMAS POR ROL (FASE 26) --- */
+
+/* Tema Docente (Verde) */
+body.theme-docente {
+    --color-primary: #14B8A6; /* Verde Teal */
+    --color-secondary: #166534; /* Verde Bosque */
+    --gradient: linear-gradient(135deg, #14B8A6, #166534);
+    --color-secondary-bg: #E0F2F1; /* Verde muy claro */
+}
+
+/* Tema Estudiante (Naranja) */
+body.theme-estudiante {
+    --color-primary: #F97316; /* Naranja Vibrante */
+    --color-secondary: #9F1239; /* Rojo Granate */
+    --gradient: linear-gradient(135deg, #F97316, #9F1239);
+    --color-secondary-bg: #FFF7ED; /* Naranja muy claro */
 }
