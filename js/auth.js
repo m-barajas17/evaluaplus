@@ -182,3 +182,27 @@ if (loginForm) {
         }
     });
 }
+
+// --- LÓGICA DE TEMA INTERACTIVO (FASE 27) ---
+// Aplicar tema por defecto al cargar (azul)
+document.addEventListener('DOMContentLoaded', () => {
+    const registerPage = document.querySelector('#register-form');
+    if (registerPage) {
+        // Aplicar el tema 'docente' por defecto ya que está 'checked'
+        document.body.classList.add('theme-docente');
+
+        // Añadir listener para cambiar el tema
+        const roleSelector = document.querySelector('.role-selector');
+        roleSelector.addEventListener('change', (e) => {
+            if (e.target.name === 'role') {
+                if (e.target.value === 'docente') {
+                    document.body.classList.remove('theme-estudiante');
+                    document.body.classList.add('theme-docente');
+                } else {
+                    document.body.classList.remove('theme-docente');
+                    document.body.classList.add('theme-estudiante');
+                }
+            }
+        });
+    }
+});

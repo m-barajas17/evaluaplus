@@ -122,6 +122,7 @@ export const initializeRedirection = () => {
                     
                     if (userRole === 'docente') {
                         // El usuario es DOCENTE
+                        document.body.classList.add('theme-docente'); // (FASE 27)
                         genericCtas.forEach(button => {
                             button.textContent = 'Ir a mi Panel';
                             button.href = 'docente.html';
@@ -133,6 +134,7 @@ export const initializeRedirection = () => {
 
                     } else if (userRole === 'estudiante') {
                         // El usuario es ESTUDIANTE
+                        document.body.classList.add('theme-estudiante'); // (FASE 27)
                         genericCtas.forEach(button => {
                             button.textContent = 'Ir a mi Panel';
                             button.href = 'estudiante.html';

@@ -912,6 +912,7 @@ const displayTeacherRooms = async (userId) => {
                     <button class="manage-button" data-room-id="${roomId}">Gestionar Evaluación</button>
                     <button class="view-results-button" data-room-id="${roomId}" data-room-title="${room.titulo}">Ver Resultados</button>
                     <button class="view-analytics-button" data-room-id="${roomId}" data-room-title="${room.titulo}">Ver Analíticas</button>
+
                 </div>`;
             roomsListContainer.appendChild(roomCard);
         });
@@ -1085,6 +1086,10 @@ onAuthStateChanged(auth, async (user) => {
             if (userDocSnap.exists()) {
                 const userData = { ...userDocSnap.data(), uid: user.uid };
                 if (userData.rol === 'docente') {
+                    // =============================================
+                    // ¡NUEVO! (Fase 27) Aplicar tema dinámico
+                    // =============================================
+                    document.body.classList.add('theme-docente');
                     initializePanel(userData);
                 } else {
                     alert("Acceso no autorizado.");

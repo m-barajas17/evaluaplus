@@ -50,6 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const userDocSnap = await getDoc(userDocRef);
 
             if (userDocSnap.exists() && userDocSnap.data().rol === 'estudiante') {
+                // =============================================
+                // ¡NUEVO! (Fase 27) Aplicar tema dinámico
+                // =============================================
+                document.body.classList.add('theme-estudiante');
+
                 // Usuario es estudiante, guardar sus datos
                 studentData.uid = user.uid;
                 studentData.nombre = userDocSnap.data().nombre;

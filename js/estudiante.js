@@ -436,6 +436,10 @@ onAuthStateChanged(auth, async (user) => {
             if (userDocSnap.exists()) {
                 const userData = { ...userDocSnap.data(), uid: userUid };
                 if (userData.rol === 'estudiante') {
+                    // =============================================
+                    // ¡NUEVO! (Fase 27) Aplicar tema dinámico
+                    // =============================================
+                    document.body.classList.add('theme-estudiante');
                     initializePanel(userData); 
                 } else {
                     // (FASE 25) Cambiado alert() por console.log y redirección simple
