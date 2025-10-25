@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación | Evalúa+</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/evaluacion.css">
+    
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+              <span>Evalúa+</span>
+            </a>
+            <div class="user-info">
+                <div id="timer-display" class="timer-container" style="display: none;">
+                    <span class="timer-icon">⏳</span>
+                    <span id="timer-countdown">--:--</span>
+                </div>
+                <p id="user-name">Cargando...</p>
+                </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="card" id="evaluation-content">
+            <div class="loader-container">
+                <div class="loader"></div>
+            </div>
+            <p style="text-align: center;">Cargando evaluación...</p>
+        </section>
+    </main>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/evaluacion.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</body>
+</html>

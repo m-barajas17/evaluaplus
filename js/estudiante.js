@@ -13,59 +13,37 @@ import {
     where,
     getDocs,
     addDoc,
-    updateDoc,  // <-- NUEVA IMPORTACIÓN (FASE 22)
-    arrayUnion  // <-- NUEVA IMPORTACIÓN (FASE 22)
+    updateDoc,  
+    arrayUnion  
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// =============================================
-// ¡NUEVO! (Paso 4.B) Constante para el Spinner
-// =============================================
+// Constante para el Spinner
 const loadingSpinner = '<div class="loader-container"><div class="loader"></div></div>';
-
 
 // --- REFERENCIAS A ELEMENTOS DEL DOM ---
 const userNameElement = document.getElementById('user-name');
 const logoutButton = document.getElementById('logout-button');
-
-// ================== NUEVAS REFERENCIAS (FASE 22) ==================
 const joinClassForm = document.getElementById('join-class-form');
 const classesListContainer = document.getElementById('classes-list');
-// ================== FIN NUEVAS REFERENCIAS (FASE 22) ==================
-
 const joinRoomForm = document.getElementById('join-room-form');
-const joinRoomSection = document.getElementById('join-room-section');
-const evaluationSection = document.getElementById('evaluation-section'); // (FASE 23) Ahora es el contenedor de evaluaciones asignadas y en curso
-const evaluationsContainer = document.getElementById('evaluations-container'); // (FASE 23) Contenedor específico para las tarjetas/preguntas
+const evaluationsContainer = document.getElementById('evaluations-container'); 
 const historyListContainer = document.getElementById('history-list');
 
-// ¡NUEVO! REFERENCIAS PARA EL TEMPORIZADOR
-const timerDisplay = document.getElementById('timer-display');
-const timerCountdown = document.getElementById('timer-countdown');
-
-// --- ¡NUEVO! REFERENCIAS PARA EL MODAL DE REVISIÓN ---
+// --- REFERENCIAS PARA EL MODAL DE REVISIÓN ---
 const reviewModal = document.getElementById('review-modal');
 const reviewModalTitle = document.getElementById('review-modal-title');
 const closeReviewModalBtn = document.getElementById('close-review-modal-btn');
 const reviewContentContainer = document.getElementById('review-content-container');
 
-
-// --- GESTIÓN DEL ESTADO DE LA EVALUACIÓN Y DEL USUARIO ---
-let currentEvaluation = null;
-let currentQuestionIndex = 0;
-let studentAnswers = [];
+// --- ESTADO DEL USUARIO ---
 let studentData = {
     uid: null,
-    nombre: null,
-    salaId: null // ID de la sala de la evaluación en curso
+    nombre: null
 };
 
-// ¡NUEVO! VARIABLE DE ESTADO DEL TEMPORIZADOR
-let timerInterval = null; // Para guardar el ID del setInterval
-
-// --- ¡NUEVO! LÓGICA DEL MODAL DE REVISIÓN ---
-
+// --- LÓGICA DEL MODAL DE REVISIÓN ---
+// (Esta lógica se mantiene intacta)
 const closeReviewModal = () => {
-    // (Lógica sin cambios)
     reviewModal.style.opacity = '0';
     setTimeout(() => {
         reviewModal.style.display = 'none';
@@ -73,7 +51,6 @@ const closeReviewModal = () => {
 };
 
 const showReview = async (resultId) => {
-    // (Lógica sin cambios desde Fase 18)
     reviewContentContainer.innerHTML = loadingSpinner;
     reviewModal.style.display = 'flex';
     setTimeout(() => reviewModal.style.opacity = '1', 10);
@@ -154,10 +131,12 @@ const showReview = async (resultId) => {
 };
 
 
-// --- LÓGICA PARA MOSTRAR HISTORIAL ---
+// --- LÓGICA PARA MOSTRAR HISTORIAL (CORREGIDA) ---
 const displayStudentHistory = async (studentId) => {
-    // (Lógica sin cambios)
     historyListContainer.innerHTML = loadingSpinner;
+    
+    // 1. LA CONSULTA (SIN orderBy)
+    // Volvemos a la consulta original que solo filtra por estudiante
     const q = query(collection(db, "resultados"), where("estudianteId", "==", studentId));
     
     try {
@@ -166,10 +145,21 @@ const displayStudentHistory = async (studentId) => {
             historyListContainer.innerHTML = '<p>Aún no has completado ninguna evaluación.</p>';
             return;
         }
-        historyListContainer.innerHTML = '';
-        
-        for (const resultDoc of querySnapshot.docs) {
-            const resultData = resultDoc.data();
+
+        // 2. ORDENACIÓN EN EL CLIENTE
+        // Convertimos los documentos a un array
+        const results = [];
+        querySnapshot.forEach(doc => {
+            results.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Ordenamos el array por fecha (más reciente primero)
+        // Usamos .toDate() porque 'fecha' es un Timestamp de Firebase
+        results.sort((a, b) => b.fecha.toDate() - a.fecha.toDate());
+
+        // 3. RENDERIZADO (CON LOS DATOS ORDENADOS)
+        // Mapeamos el array 'results' ya ordenado
+        const historyItemsHTML = await Promise.all(results.map(async (resultData) => {
             const roomDocRef = doc(db, "salas", resultData.salaId);
             const roomDocSnap = await getDoc(roomDocRef);
 
@@ -178,14 +168,16 @@ const displayStudentHistory = async (studentId) => {
                 roomTitle = roomDocSnap.data().titulo;
             }
 
-            const historyItem = `
-                <div class="history-item" data-result-id="${resultDoc.id}">
+            return `
+                <div class="history-item" data-result-id="${resultData.id}">
                     <span class="history-item-title">${roomTitle}</span>
                     <span class="history-item-score">${resultData.calificacion} / ${resultData.totalPreguntas}</span>
                 </div>
             `;
-            historyListContainer.innerHTML += historyItem;
-        }
+        }));
+
+        historyListContainer.innerHTML = historyItemsHTML.join('');
+
     } catch (error) {
         console.error("Error al obtener el historial:", error);
         historyListContainer.innerHTML = '<p>Ocurrió un error al cargar tu historial.</p>';
@@ -199,7 +191,7 @@ const displayStudentHistory = async (studentId) => {
 
 // --- LÓGICA PARA MOSTRAR CLASES ---
 const displayStudentClasses = async (studentId) => {
-    // (Lógica sin cambios desde Fase 22)
+    // (Lógica sin cambios)
     classesListContainer.innerHTML = loadingSpinner;
     const q = query(collection(db, "clases"), where("estudiantesIds", "array-contains", studentId));
 
@@ -228,34 +220,28 @@ const displayStudentClasses = async (studentId) => {
 };
 
 
-// ================== NUEVA FUNCIÓN (FASE 23) ==================
-/**
- * Muestra las evaluaciones (salas) asignadas a las clases del estudiante.
- */
+// --- LÓGICA PARA MOSTRAR EVALUACIONES ASIGNADAS ---
 const displayAssignedEvaluations = async (studentId) => {
-    evaluationsContainer.innerHTML = loadingSpinner; // Mostrar spinner mientras carga
+    // (Lógica sin cambios)
+    evaluationsContainer.innerHTML = loadingSpinner; 
     
     try {
-        // 1. Encontrar las clases en las que está inscrito el estudiante
         const classesQuery = query(collection(db, "clases"), where("estudiantesIds", "array-contains", studentId));
         const classesSnapshot = await getDocs(classesQuery);
 
         if (classesSnapshot.empty) {
             evaluationsContainer.innerHTML = '<p>No estás inscrito en ninguna clase. Las evaluaciones asignadas por tus docentes aparecerán aquí una vez te inscribas.</p>';
-            return; // Si no está en clases, no puede tener evaluaciones asignadas
+            return; 
         }
 
-        // 2. Obtener los IDs de esas clases
         const classIds = classesSnapshot.docs.map(doc => doc.id);
 
-        // 3. Buscar salas que estén asignadas a CUALQUIERA de esas clases
-        // Nota: Firestore limita "array-contains-any" a un máximo de 30 IDs en la consulta.
-        // Para más clases, se necesitaría una estructura de datos diferente o múltiples consultas.
-        if (classIds.length === 0) { // Doble chequeo por si acaso
+        if (classIds.length === 0) { 
              evaluationsContainer.innerHTML = '<p>Estás inscrito en clases, pero parece haber un problema al obtener sus IDs.</p>';
              return;
         }
         
+        // Limite 'array-contains-any' es 30 en Firestore v10+ (subió de 10)
         const evaluationsQuery = query(collection(db, "salas"), where("clasesAsignadas", "array-contains-any", classIds));
         const evaluationsSnapshot = await getDocs(evaluationsQuery);
 
@@ -264,13 +250,12 @@ const displayAssignedEvaluations = async (studentId) => {
             return;
         }
 
-        // 4. Renderizar las tarjetas de evaluación
-        evaluationsContainer.innerHTML = ''; // Limpiar el spinner para mostrar las tarjetas
+        evaluationsContainer.innerHTML = ''; 
         evaluationsSnapshot.forEach((doc) => {
             const sala = doc.data();
             const salaId = doc.id;
             const evaluationCard = document.createElement('div');
-            evaluationCard.className = 'evaluation-card'; // Usar el nuevo estilo CSS
+            evaluationCard.className = 'evaluation-card'; 
             evaluationCard.innerHTML = `
                 <div class="evaluation-card-info">
                     <h3>${sala.titulo}</h3>
@@ -291,208 +276,8 @@ const displayAssignedEvaluations = async (studentId) => {
         }).showToast();
     }
 };
-// ================== FIN NUEVA FUNCIÓN (FASE 23) ==================
 
-
-const handleFinishEvaluation = async () => {
-    // (Lógica sin cambios)
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        timerDisplay.style.display = 'none';
-    }
-
-    saveCurrentAnswer();
-    let score = 0;
-    currentEvaluation.questions.forEach((question, index) => {
-        // Comparación simple funciona para M/C, T/F y ShortAnswer (exacto)
-        if (question.correcta === studentAnswers[index]) {
-            score++;
-        }
-    });
-
-    const resultData = {
-        salaId: studentData.salaId,
-        estudianteId: studentData.uid,
-        nombreEstudiante: studentData.nombre,
-        calificacion: score,
-        totalPreguntas: currentEvaluation.questions.length,
-        respuestas: studentAnswers,
-        fecha: new Date()
-    };
-
-    try {
-        await addDoc(collection(db, "resultados"), resultData);
-        const resultsHTML = `
-            <div class="results-container">
-                <h2>¡Evaluación Completada!</h2>
-                <p>Este es tu resultado final para la evaluación "${currentEvaluation.title}".</p>
-                <div class="score-display">
-                    <span class="score">${score}</span>
-                    <span class="total">de ${currentEvaluation.questions.length}</span>
-                </div>
-                <p style="margin-top: 1.5rem;">Ahora puedes ver la revisión detallada en tu historial o volver a tus evaluaciones asignadas.</p>
-                <button id="back-to-assigned" class="cta-button secondary" style="margin-top: 1rem; width: auto;">Ver Evaluaciones Asignadas</button>
-            </div>`;
-        evaluationsContainer.innerHTML = resultsHTML; // Mostrar resultado en el contenedor principal
-
-        // (FASE 23) Añadir listener al botón para volver
-        document.getElementById('back-to-assigned').addEventListener('click', () => {
-             // Resetear estado de evaluación y volver a mostrar asignadas
-             currentEvaluation = null;
-             studentData.salaId = null;
-             joinRoomSection.style.display = 'block'; // Mostrar de nuevo sección de unirse por código
-             displayAssignedEvaluations(studentData.uid);
-        });
-
-
-        Toastify({
-            text: "¡Evaluación guardada con éxito!",
-            duration: 3000,
-            style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
-        }).showToast();
-
-        await displayStudentHistory(studentData.uid); // Actualizar historial
-
-    } catch (error) {
-        console.error("Error al guardar el resultado:", error);
-        Toastify({
-            text: "Ocurrió un error al guardar tu resultado.",
-            duration: 3000,
-            style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" }
-        }).showToast();
-    }
-};
-
-function startTimer(endTime) {
-    // (Lógica sin cambios)
-    timerDisplay.style.display = 'flex';
-    if (timerInterval) clearInterval(timerInterval);
-
-    timerInterval = setInterval(() => {
-        const now = Date.now();
-        const remaining = endTime - now;
-
-        if (remaining <= 0) {
-            clearInterval(timerInterval);
-            timerCountdown.textContent = "00:00";
-            timerDisplay.classList.add('danger');
-            Toastify({
-                text: "¡El tiempo se ha agotado! Tu evaluación se enviará automáticamente.",
-                duration: 5000,
-                style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" }
-            }).showToast();
-            handleFinishEvaluation();
-            return;
-        }
-
-        const minutes = Math.floor((remaining / 1000 / 60) % 60);
-        const seconds = Math.floor((remaining / 1000) % 60);
-        timerCountdown.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-        if (remaining < 300000) { // 5 minutos
-            timerDisplay.classList.add('danger');
-        } else {
-             timerDisplay.classList.remove('danger'); // (FASE 23 Fix) Quitar clase si el tiempo vuelve a ser > 5min (poco probable pero buena práctica)
-        }
-    }, 1000);
-}
-
-const saveCurrentAnswer = () => {
-    // (Lógica sin cambios)
-    const selectedOption = evaluationsContainer.querySelector('input[name="question"]:checked'); // (FASE 23 Fix) Buscar dentro de evaluationsContainer
-    const shortAnswerInput = evaluationsContainer.querySelector('#short-answer-input'); // (FASE 23 Fix) Buscar dentro de evaluationsContainer
-
-    if (selectedOption) {
-        studentAnswers[currentQuestionIndex] = selectedOption.value;
-    } else if (shortAnswerInput) {
-        studentAnswers[currentQuestionIndex] = shortAnswerInput.value.trim();
-    } else {
-         studentAnswers[currentQuestionIndex] = null; // Guardar null si no hay respuesta (importante para la revisión)
-    }
-};
-
-const displayQuestion = () => {
-    // (Lógica sin cambios desde Fase 18)
-    const questionData = currentEvaluation.questions[currentQuestionIndex];
-    const savedAnswer = studentAnswers[currentQuestionIndex]; // Obtener respuesta guardada (puede ser null)
-    const questionType = questionData.tipo || 'multipleChoice';
-    let optionsHTML = '';
-
-    if (questionType === 'multipleChoice') {
-        optionsHTML = Object.entries(questionData.opciones).map(([key, value]) => `
-            <label class="option">
-                <input type="radio" name="question" value="${key}" ${savedAnswer === key ? 'checked' : ''}>
-                <span><strong>${key})</strong> ${value}</span>
-            </label>
-        `).join('');
-    } else if (questionType === 'trueFalse') {
-        optionsHTML = Object.entries(questionData.opciones).map(([key, value]) => `
-            <label class="option">
-                <input type="radio" name="question" value="${key}" ${savedAnswer === key ? 'checked' : ''}>
-                <span><strong>${key})</strong> ${value}</span>
-            </label>
-        `).join('');
-    } else if (questionType === 'shortAnswer') {
-        optionsHTML = `
-            <div class="input-group">
-                <label for="short-answer-input">Escribe tu respuesta:</label>
-                <input type="text" id="short-answer-input" class="student-short-answer" value="${savedAnswer || ''}" placeholder="Respuesta...">
-            </div>
-        `;
-    }
-
-    const evaluationHTML = `
-        <h2>${currentEvaluation.title}</h2>
-        <div class="question-container">
-            <p class="question-text">${currentQuestionIndex + 1}. ${questionData.pregunta}</p>
-            <form id="question-form">
-                <div class="options">${optionsHTML}</div>
-            </form>
-            <div class="nav-buttons">
-                ${currentQuestionIndex > 0 ? '<button id="prev-btn" class="cta-button secondary">Anterior</button>' : '<div></div>' /* Placeholder para mantener alineación */}
-                ${currentQuestionIndex < currentEvaluation.questions.length - 1 ? '<button id="next-btn" class="cta-button">Siguiente</button>' : ''}
-                ${currentQuestionIndex === currentEvaluation.questions.length - 1 ? '<button id="finish-btn" class="cta-button">Finalizar Evaluación</button>' : ''}
-            </div>
-        </div>`;
-    evaluationsContainer.innerHTML = evaluationHTML; // Renderizar dentro del contenedor principal
-};
-
-const startEvaluation = (roomData, roomId) => {
-    // (Lógica sin cambios, excepto ocultar joinRoomSection)
-    joinRoomSection.style.display = 'none'; // Ocultar sección de unirse por código al empezar una evaluación
-
-    // Iniciar temporizador si existe
-    if (roomData.limiteTiempo && roomData.limiteTiempo > 0) {
-        const tiempoEnMilisegundos = roomData.limiteTiempo * 60 * 1000;
-        const endTime = Date.now() + tiempoEnMilisegundos;
-        startTimer(endTime);
-    } else {
-        // (FASE 23) Asegurarse de que el timer esté oculto si no hay límite
-         if (timerInterval) clearInterval(timerInterval);
-         timerInterval = null;
-         timerDisplay.style.display = 'none';
-         timerDisplay.classList.remove('danger');
-    }
-    
-    if (!roomData.preguntas || roomData.preguntas.length === 0) {
-        evaluationsContainer.innerHTML = `<h2>Evaluación no disponible</h2><p>Esta sala aún no tiene preguntas. Por favor, contacta a tu docente.</p>`;
-        return;
-    }
-    
-    // Configurar estado de la evaluación actual
-    currentEvaluation = {
-        title: roomData.titulo,
-        questions: roomData.preguntas
-    };
-    studentData.salaId = roomId; // Guardar ID de la sala actual
-    studentAnswers = new Array(currentEvaluation.questions.length).fill(null); // Resetear respuestas
-    currentQuestionIndex = 0; // Empezar desde la primera pregunta
-    
-    displayQuestion(); // Mostrar la primera pregunta
-};
-
-
+// --- LÓGICA DE UNIRSE A CLASE ---
 const handleJoinClass = async (e) => {
     // (Lógica sin cambios)
     e.preventDefault();
@@ -529,8 +314,8 @@ const handleJoinClass = async (e) => {
             Toastify({ text: `¡Inscrito en "${classData.nombreClase}" con éxito!`, duration: 2000, style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } }).showToast();
 
             joinClassForm.reset();
-            await displayStudentClasses(studentData.uid); // Refrescar lista de clases
-            await displayAssignedEvaluations(studentData.uid); // (FASE 23) Refrescar evaluaciones asignadas también
+            await displayStudentClasses(studentData.uid);
+            await displayAssignedEvaluations(studentData.uid);
         }
     } catch (error) {
         console.error("Error al unirse a la clase:", error);
@@ -539,8 +324,9 @@ const handleJoinClass = async (e) => {
     }
 };
 
+// --- LÓGICA DE UNIRSE A SALA POR CÓDIGO ---
 const handleJoinRoom = async (e) => {
-    // (Lógica sin cambios)
+    // (Lógica modificada en el paso anterior)
     e.preventDefault();
     const roomCode = joinRoomForm['room-code'].value.trim().toUpperCase();
     if (!roomCode) return;
@@ -562,11 +348,15 @@ const handleJoinRoom = async (e) => {
             }).showToast();
         } else {
             const roomDoc = querySnapshot.docs[0];
+            const roomId = roomDoc.id; 
+
              Toastify({
-                text: `¡Unido a "${roomDoc.data().titulo}"!`, duration: 2000,
+                text: `¡Unido a "${roomDoc.data().titulo}"! Abriendo evaluación...`, duration: 2000,
                 style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
             }).showToast();
-            startEvaluation(roomDoc.data(), roomDoc.id); // Iniciar la evaluación encontrada por código
+            
+            // Redirigir a la nueva página
+            window.open(`evaluacion.html?roomId=${roomId}`, '_blank');
         }
     } catch (error) {
         console.error("Error al buscar la sala:", error);
@@ -585,7 +375,6 @@ const initializePanel = (userData) => {
     studentData.nombre = userData.nombre;
 
     logoutButton.addEventListener('click', async () => {
-        // (Lógica sin cambios)
         try {
             await signOut(auth);
             window.location.href = 'login.html';
@@ -601,80 +390,24 @@ const initializePanel = (userData) => {
     joinClassForm.addEventListener('submit', handleJoinClass);
     joinRoomForm.addEventListener('submit', handleJoinRoom);
 
-    // ================== NUEVO LISTENER (FASE 23) ==================
-    // Listener para los botones "Comenzar Evaluación" de las tarjetas asignadas
+    // Listener para botones de evaluaciones asignadas
     evaluationsContainer.addEventListener('click', async (e) => {
-        // Solo actuar si se hizo clic en un botón con la clase 'start-eval-btn'
         if (e.target.classList.contains('start-eval-btn')) {
-            const roomId = e.target.dataset.roomId; // Obtener el ID de la sala desde el atributo data
+            const roomId = e.target.dataset.roomId;
             
-            // Mostrar un Toast de carga mientras se obtienen los datos
-            const startingToast = Toastify({
-                text: "Cargando evaluación...",
-                duration: -1, // Indefinido hasta que se cierre manualmente
+             Toastify({
+                text: "Abriendo evaluación...",
+                duration: 1500,
                 style: { background: "linear-gradient(135deg, #38BDF8, #3730A3)" }
             }).showToast();
             
-            try {
-                // Obtener los datos completos de la sala desde Firestore
-                const roomDocRef = doc(db, "salas", roomId);
-                const roomDocSnap = await getDoc(roomDocRef);
-    
-                startingToast.hideToast(); // Ocultar el Toast de carga
-                if (roomDocSnap.exists()) {
-                    // Si la sala existe, llamar a startEvaluation para iniciarla
-                    startEvaluation(roomDocSnap.data(), roomDocSnap.id); 
-                } else {
-                    // Mostrar error si la sala no se encuentra (poco probable pero posible)
-                    Toastify({
-                        text: "Error: No se pudo encontrar la evaluación asignada.",
-                        duration: 3000,
-                        style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" }
-                    }).showToast();
-                }
-            } catch (error) {
-                // Manejar errores al obtener los datos de la sala
-                console.error("Error al iniciar evaluación asignada:", error);
-                startingToast.hideToast();
-                Toastify({
-                    text: "Ocurrió un error al cargar la evaluación.",
-                    duration: 3000,
-                    style: { background: "linear-gradient(to right, #e74c3c, #c0392b)" }
-                }).showToast();
-            }
-        }
-    });
-    // ================== FIN NUEVO LISTENER (FASE 23) ==================
-
-    // Listener para los botones DENTRO de una evaluación (Siguiente, Anterior, Finalizar)
-    // (FASE 23) Necesitamos delegar este listener también, ya que el contenido se renderiza dinámicamente
-    evaluationSection.addEventListener('click', (e) => { // Escuchar en la sección padre
-        if (e.target.id === 'next-btn') {
-            saveCurrentAnswer(); // Guardar respuesta actual antes de avanzar
-            currentQuestionIndex++;
-            displayQuestion(); // Mostrar siguiente pregunta
-        }
-        if (e.target.id === 'prev-btn') {
-            saveCurrentAnswer(); // Guardar respuesta actual antes de retroceder
-            currentQuestionIndex--;
-            displayQuestion(); // Mostrar pregunta anterior
-        }
-        if (e.target.id === 'finish-btn') {
-             saveCurrentAnswer(); // Asegurarse de guardar la última respuesta
-             handleFinishEvaluation(); // Finalizar y calificar
-        }
-        // (FASE 23) Si se hace clic en el botón "Ver Evaluaciones Asignadas" después de terminar
-        if (e.target.id === 'back-to-assigned') {
-             currentEvaluation = null;
-             studentData.salaId = null;
-             joinRoomSection.style.display = 'block'; // Volver a mostrar sección de código
-             displayAssignedEvaluations(studentData.uid); // Recargar lista de asignadas
+            // Redirigir a la nueva página
+            window.open(`evaluacion.html?roomId=${roomId}`, '_blank');
         }
     });
     
     // Listeners para el modal de revisión
     historyListContainer.addEventListener('click', (e) => {
-        // (Lógica sin cambios)
         const historyItem = e.target.closest('.history-item');
         if (historyItem) {
             const resultId = historyItem.dataset.resultId;
@@ -683,14 +416,13 @@ const initializePanel = (userData) => {
     });
     closeReviewModalBtn.addEventListener('click', closeReviewModal);
     reviewModal.addEventListener('click', (e) => {
-        // (Lógica sin cambios)
         if (e.target === reviewModal) closeReviewModal();
     });
 
     // Carga inicial de datos al entrar al panel
-    displayStudentClasses(userData.uid);        // Cargar clases inscritas
-    displayAssignedEvaluations(userData.uid);   // (FASE 23) Cargar evaluaciones asignadas
-    displayStudentHistory(userData.uid);        // Cargar historial
+    displayStudentClasses(userData.uid);
+    displayAssignedEvaluations(userData.uid);
+    displayStudentHistory(userData.uid); // <--- Llamada a la función corregida
 };
 
 // --- GUARDIÁN DE RUTA ---
@@ -704,15 +436,16 @@ onAuthStateChanged(auth, async (user) => {
             if (userDocSnap.exists()) {
                 const userData = { ...userDocSnap.data(), uid: userUid };
                 if (userData.rol === 'estudiante') {
-                    initializePanel(userData); // Iniciar panel si es estudiante
+                    initializePanel(userData); 
                 } else {
-                    alert("Acceso no autorizado."); // Redirigir si no es estudiante
+                    // (FASE 25) Cambiado alert() por console.log y redirección simple
+                    console.log("Acceso no autorizado, redirigiendo."); 
                     window.location.href = 'index.html';
                 }
-            } else { window.location.href = 'login.html'; } // Redirigir si no hay datos de usuario
+            } else { window.location.href = 'login.html'; } 
         } catch (error) {
             console.error("Error al obtener datos:", error);
-            window.location.href = 'login.html'; // Redirigir en caso de error
+            window.location.href = 'login.html'; 
         }
-    } else { window.location.href = 'login.html'; } // Redirigir si no hay sesión
+    } else { window.location.href = 'login.html'; } 
 });

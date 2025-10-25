@@ -1,0 +1,273 @@
+/* --- ESTILOS PARA LA PÁGINA DE EVALUACIÓN DEDICADA --- */
+/* Importamos las variables raíz para mantener la coherencia visual */
+:root {
+    --color-background: #F0F2F5;
+    --color-surface: #FFFFFF;
+    --color-text: #1C2A4B;
+    --color-text-muted: #6B7280;
+    --color-primary: #38BDF8;
+    --color-secondary: #3730A3;
+    --gradient: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    --color-border: #E5E7EB;
+    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.07), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --font-family: 'Poppins', sans-serif;
+    --border-radius: 16px;
+    --transition-speed: 0.3s;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--color-background);
+    color: var(--color-text);
+    line-height: 1.6;
+}
+
+/* Estilos del Encabezado (Copiados de estudiante.css) */
+.header {
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-md);
+    padding: 1rem 5%;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 900px; /* Ancho más enfocado */
+    margin: 0 auto;
+}
+
+.logo {
+    font-weight: 700;
+    font-size: 1.5rem;
+    text-decoration: none;
+    color: var(--color-text);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+#user-name {
+    font-weight: 600;
+}
+
+/* Contenedor principal enfocado */
+.main-container {
+    max-width: 900px;
+    margin: 2.5rem auto;
+    padding: 0 5%;
+}
+
+.card {
+    background: var(--color-surface);
+    border-radius: var(--border-radius);
+    padding: 2rem 2.5rem;
+    box-shadow: var(--shadow-md);
+}
+
+/* --- Loader (Copiado de estudiante.css) --- */
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid var(--color-border);
+    border-bottom-color: var(--color-secondary);
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+    margin: 2rem auto;
+}
+
+@keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 2rem 0;
+}
+
+/* --- Temporizador (Copiado de estudiante.css) --- */
+.timer-container {
+    background-color: #FFFBEB;
+    color: #B45309;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    border: 1px solid #FDE68A;
+}
+.timer-container.danger {
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border-color: #FECACA;
+}
+
+/* --- Botones (Copiados de estudiante.css) --- */
+.cta-button {
+    background: var(--gradient);
+    color: var(--color-surface);
+    width: 100%;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all var(--transition-speed) ease;
+}
+
+.cta-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(55, 48, 163, 0.2);
+}
+
+.cta-button.secondary {
+    background: transparent;
+    color: var(--color-secondary);
+    border: 2px solid var(--color-secondary);
+}
+
+
+/* --- Estilos de Evaluación (Migrados de estudiante.css) --- */
+.question-container {
+    margin-top: 1.5rem;
+    text-align: left;
+}
+
+.question-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+}
+
+.option:hover,
+.option:has(input:checked) {
+    background-color: #EEF2FF;
+    border-color: var(--color-secondary);
+}
+
+.option input[type="radio"] {
+    margin-right: 1rem;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-secondary);
+}
+
+.option span {
+    flex: 1;
+}
+
+.nav-buttons {
+    margin-top: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--color-border);
+    padding-top: 1.5rem;
+}
+
+.nav-buttons .cta-button {
+    width: auto;
+    padding: 0.8rem 2rem;
+}
+
+/* --- Estilos para Respuesta Corta (Migrados de estudiante.css) --- */
+.input-group {
+    margin-bottom: 1.25rem;
+}
+
+.input-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.student-short-answer {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 2px solid var(--color-border);
+    font-size: 1rem;
+    font-family: var(--font-family);
+}
+
+.student-short-answer:focus {
+    outline: none;
+    border-color: var(--color-secondary);
+}
+
+/* --- Estilos para Vista de Resultados (Migrados de estudiante.css) --- */
+.results-container {
+    text-align: center;
+}
+
+.results-container h2 {
+    font-size: 2rem;
+    color: var(--color-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.results-container p {
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    margin-bottom: 2rem;
+}
+
+.score-display {
+    background: var(--gradient);
+    color: var(--color-surface);
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    box-shadow: 0 10px 25px rgba(55, 48, 163, 0.3);
+}
+
+.score-display .score {
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.score-display .total {
+    font-size: 1.2rem;
+    opacity: 0.8;
+}
